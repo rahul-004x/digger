@@ -36,49 +36,51 @@ const Input = () => {
   };
 
   return (
-    <div>
-      <div className="mb-10">
-        {sources.length > 0 && (
-          <div>
-            <p>Sources</p>
-            <ul>
-              {sources.map((source) => (
-                <li key={source.name}>
-                  <a href={source.url}>{source.name}</a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-      <form onSubmit={handleSubmit}>
+    <div className="max-w-3xl mx-auto">
+      {/* <div className="mb-10"> */}
+      {/*   {sources.length > 0 && ( */}
+      {/*     <div> */}
+      {/*       <p>Sources</p> */}
+      {/*       <ul> */}
+      {/*         {sources.map((source) => ( */}
+      {/*           <li key={source.name}> */}
+      {/*             <a href={source.url}>{source.name}</a> */}
+      {/*           </li> */}
+      {/*         ))} */}
+      {/*       </ul> */}
+      {/*     </div> */}
+      {/*   )} */}
+      {/* </div> */}
+      <form
+        onSubmit={handleSubmit}
+        className="min-w-2xl rounded-lg border-gray-600 p-4"
+      >
         <div className="relative">
-          <input
-            type="text"
+          <textarea
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="What you want to dig..."
-            className="w-full rounded-lg border-2 py-3 pr-12 pl-3 focus:outline-none"
+            className="w-full resize-none rounded-xl border-1 py-3 pr-12 pl-3 pb-6 focus:outline-none"
             disabled={isPending}
+            rows={3}
           />
           <button
             type="submit"
-            className="ronded-r-lg absolute inset-y-0 right-0 flex w-12 -translate-x-[1px] items-center justify-center bg-gray-300 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 bottom-2 rounded-lg bg-gray-400 p-2 text-white hover:bg-gray-600 focus:outline-none"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
               fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
               stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="lucide lucide-arrow-right h-5 w-5"
+              className="size-6"
             >
-              <path d="M5 12h14" />
-              <path d="m12 5 7 7-7 7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
+              />
             </svg>
           </button>
         </div>
