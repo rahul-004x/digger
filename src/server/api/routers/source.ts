@@ -29,20 +29,31 @@ export const sourceRouter = createTRPCRouter({
     }),
 
   getAnswer: publicProcedure
-    .input(z.object({ url: z.string() }))
+    .input(z.object({ urls: z.array(z.string()) }))
     .mutation(async ({ input }) => {
-      const response = await fetch(input.url);
-      const html = await response.text();
+      let answers = await Promise.all(
+        input.urls.map(async (url: string) => {
+          const response = await fetch(url);
+          const html = await response.text();
 
-      const virtualConsole = new jsdom.VirtualConsole();
-      const dom = new JSDOM(html, { virtualConsole });
+          const virtualConsole = new jsdom.VirtualConsole();
+          const dom = new JSDOM(html, { virtualConsole });
 
-      const reader = new Readability(dom.window.document);
-      const article = reader.parse();
+          const reader = new Readability(dom.window.document);
+          const article = reader.parse();
 
-      return {
-        answer: article?.textContent || "No content found",
-      };
-    // return article?.textContent
+          let cleanText = article?.textContent || "No content found";
+          cleanText = cleanText
+            .replace(/\n\s*\n\s*\n/g, "\n\n")
+            .replace(/[ \t]{2,}/g, " ")
+            .replace(/^\s+|\s+$/gm, "")
+            .trim();
+
+          return {
+            answer: cleanText,
+          };
+        }),
+      );
+      return answers;
     }),
 });

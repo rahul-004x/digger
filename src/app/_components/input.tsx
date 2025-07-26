@@ -11,11 +11,11 @@ interface Source {
 const Input = () => {
   const [question, setQuestion] = useState("");
   const [sources, setSources] = useState<Source[]>([]);
-  const [answer, setAnswer] = useState<{ answer: string } | null>(null);
+  const [answers, setAnswers] = useState<Array<{ answer: string }>>([]);
 
   const { mutate: getAnswerMutate } = api.source.getAnswer.useMutation({
     onSuccess: (data) => {
-      setAnswer(data);
+      setAnswers(data);
     },
   });
 
@@ -24,10 +24,9 @@ const Input = () => {
       onSuccess: async (data) => {
         setQuestion("");
         setSources(data);
-        if (data.length > 0) {
-          getAnswerMutate({ url: data[0]?.url });
-          console.log(answer);
-        }
+        const urls = data.map((item) => item.url);
+        getAnswerMutate({ urls });
+        console.log(answers);
       },
     });
 
