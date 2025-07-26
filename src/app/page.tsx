@@ -6,8 +6,8 @@ import { api, HydrateClient } from "@/trpc/server";
 export default async function Home() {
   return (
     <HydrateClient>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b">
-        <div>
+      <main className="mx-auto flex min-h-screen max-w-7xl items-end justify-center bg-gradient-to-b pb-20">
+        <div className="w-full max-w-lg">
           <Input />
         </div>
       </main>
