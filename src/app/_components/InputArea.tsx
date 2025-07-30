@@ -1,7 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import { api } from "@/trpc/react";
-import Answer from "./answer";
 
 export type TInputProps = {
   promptValue: string;
@@ -34,6 +32,7 @@ const InputArea: React.FC<TInputProps> = ({
               className="w-full resize-none rounded-xl border-1 py-3 pr-12 pb-6 pl-3 focus:outline-none"
               disabled={disabled}
               rows={3}
+              autoFocus
             />
             <button
               type="submit"
