@@ -4,9 +4,15 @@ import jsdom, { JSDOM } from "jsdom";
 
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
 import { tavily } from "@tavily/core";
+import openAI from "openai";
 
 const tavilyClient = tavily({
   apiKey: process.env.TAVILY_API_KEY,
+});
+
+const openRouterClient = new openAI({
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENROUTER_API_KEY
 });
 
 export const sourceRouter = createTRPCRouter({
