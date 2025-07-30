@@ -14,11 +14,13 @@ const Hero = () => {
   const [sources, setSources] = useState<Source[]>([]);
   const [showResult, setShowResult] = useState(false);
 
-  const { mutate: GetSources, isLoading } = api.source.getSource.useMutation({
+  const mutation = api.source.getSource.useMutation({
     onSuccess: (data) => {
       setSources(data);
     },
   });
+
+  const { mutate: GetSources } = mutation;
 
   const handleDisplayResult = () => {
     if (promptValue.trim()) {
@@ -36,7 +38,6 @@ const Hero = () => {
             promptValue={promptValue}
             setPromptValue={setPromptValue}
             handleDisplayResult={handleDisplayResult}
-            disabled={isLoading}
           />
         </div>
       </div>
@@ -52,24 +53,20 @@ const Hero = () => {
             {promptValue && (
               <div className="my-2 w-full border-b-2 border-gray-300" />
             )}
-            {isLoading ? (
-              <p>Loading sources...</p>
-            ) : (
-              <div className="mt-4">
-                {sources.map((source, index) => (
-                  <div key={index} className="mb-2 rounded-md border p-2">
-                    <a
-                      href={source.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:underline"
-                    >
-                      {source.name}
-                    </a>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="mt-4">
+              {sources.map((source, index) => (
+                <div key={index} className="mb-2 rounded-md border p-2">
+                  <a
+                    href={source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:underline"
+                  >
+                    {source.name}
+                  </a>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
         <div className="flex justify-center">
@@ -77,7 +74,6 @@ const Hero = () => {
             promptValue={promptValue}
             setPromptValue={setPromptValue}
             handleDisplayResult={handleDisplayResult}
-            disabled={isLoading}
           />
         </div>
       </div>
