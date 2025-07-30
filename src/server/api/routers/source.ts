@@ -27,6 +27,25 @@ const cleanedText = (text: string) => {
   return newText.substring(0, 20000);
 };
 
+async function fetchWithTimeout(url: string, timeout = 3000) {
+  const controller = new AbortController();
+  const { signal } = controller;
+
+  const fetchTimeout = setTimeout(() => {
+    controller.abort();
+  }, timeout);
+
+  return fetch(url, { signal })
+    .then((response) => {
+      clearTimeout(fetchTimeout);
+      return response;
+    })
+    .catch((error) => {
+      if (error.name === "AbortError") throw new Error("fetch request timeout");
+      throw error;
+    });
+}
+
 export const sourceRouter = createTRPCRouter({
   getSource: publicProcedure
     .input(z.object({ question: z.string() }))
@@ -48,39 +67,7 @@ export const sourceRouter = createTRPCRouter({
 
   getContext: publicProcedure
     .input(z.object({ urls: z.array(z.string()) }))
-    .mutation(async ({ input }) => {
-      let context = await Promise.all(
-        input.urls.map(async (url: string) => {
-          try {
-            const response = await fetch(url);
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const html = await response.text();
-
-            const virtualConsole = new jsdom.VirtualConsole();
-            const dom = new JSDOM(html, { virtualConsole });
-
-            const reader = new Readability(dom.window.document);
-            const article = reader.parse();
-
-            let cleanText = article?.textContent || "No content found";
-            cleanText = cleanedText(cleanText);
-            console.log(
-              `After cleaning (${url}):`,
-              cleanText.substring(0, 100),
-            );
-            return {
-              context: cleanText,
-            };
-          } catch (error) {
-            console.error(`Failed to fetch or parse ${url}:`, error);
-            return {
-              context: `Could not retrieve content from ${url}`,
-            };
-          }
-        }),
-      );
+    .query(async function* ({ input }) {
       const mainAnswerPrompt = `
   Given a user question and some context, please write a clean, concise and accurate answer to the question based on the context. You will be given a set of related contexts to the question, each starting with a reference number like [[citation:x]], where x is a number. Please use the context when crafting your answer.
 
@@ -89,21 +76,43 @@ export const sourceRouter = createTRPCRouter({
 
   Remember, don't blindly repeat the contexts verbatim and don't tell the user how you used the citations – just respond with the answer. It is very important for my career that you follow these instructions. Here is the user question:
     `;
-      const combinedContext = context.map((item) => item?.context).join("\n\n");
-      const completions = await openRouterClient.chat.completions.create({
+
+      // 1. fetch & clean pages
+      const context = await Promise.all(
+        input.urls.map(async (url) => {
+          try {
+            const html = await (await fetchWithTimeout(url)).text();
+            const dom = new JSDOM(html, {
+              virtualConsole: new jsdom.VirtualConsole(),
+            });
+            const text = cleanedText(
+              new Readability(dom.window.document).parse()?.textContent ||
+                "No content",
+            );
+            return { context: text };
+          } catch {
+            return { context: `Could not retrieve ${url}` };
+          }
+        }),
+      );
+
+      // 2. yield context object once
+      yield { type: "context", data: context } as const;
+
+      // 3. stream LLM tokens
+      const combined = context.map((c) => c.context).join("\n\n");
+      const stream = await openRouterClient.chat.completions.create({
         model: "moonshotai/kimi-k2:free",
         messages: [
-          {
-            role: "system",
-            content: `${mainAnswerPrompt}`,
-          },
-          {
-            role: "user",
-            content: `Here is the extracted context from web:\n\n${combinedContext}`,
-          },
+          { role: "system", content: mainAnswerPrompt },
+          { role: "user", content: combined },
         ],
+        stream: true,
       });
-      console.log(completions.choices[0]?.message);
-      return context;
+
+      for await (const chunk of stream) {
+        const token = chunk.choices[0]?.delta?.content;
+        if (token) yield { type: "answer", data: token } as const;
+      }
     }),
 });

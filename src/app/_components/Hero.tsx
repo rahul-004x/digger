@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import InputArea from "./InputArea";
 import { api } from "@/trpc/react";
 import Source from "./Source";
+import Answer from "./answer";
 
 type Source = {
   name: string;
@@ -14,27 +15,47 @@ const Hero = () => {
   const [promptValue, setPromptValue] = useState("");
   const [sources, setSources] = useState<Source[]>([]);
   const [showResult, setShowResult] = useState(false);
-  const [context, setContext] = useState("");
+  const [context, setContext] = useState<string>("");
+  const [answer, setAnswer] = useState<string>("");
 
   const mutation = api.source.getSource.useMutation({
     onSuccess: (data) => {
       setSources(data);
       if (data.length > 0) {
         const urls = data.map((source) => source.url);
-        GetContext({ urls });
+        void api.useUtils().source.getContext.invalidate({ urls });
       }
     },
   });
 
   const { mutate: GetSources, isPending } = mutation;
 
-  const { mutate: GetContext } = api.source.getContext.useMutation({
-    onSuccess: (data) => {
-      const combinedContext = data.map((c) => c.context).join("\n\n");
-      setContext(combinedContext);
-      console.log(context)
+  const { data: chunks, isFetching } = api.source.getContext.useQuery(
+    { urls: sources.map((s) => s.url) },
+    {
+      enabled: sources.length > 0, //only runs when source urls exists
+      trpc: { abortOnUnmount: false }, // keeps sse open
     },
-  });
+  );
+
+  useEffect(() => {
+    if (!chunks) return;
+    const ans = chunks
+      .filter((c) => c.type === "answer")
+      .map((c) => c.data)
+      .join("");
+    setAnswer(ans);
+  }, [chunks]);
+
+  // const { mutate: GetContext } = api.source.getContext.useQuery({
+  //   onSuccess: (data) => {
+  //     if (data) {
+  //       const combinedContext = data.context.map((c) => c.context).join("\n\n");
+  //       setContext(combinedContext);
+  //       setAnswer(data.aiAnswer ?? "");
+  //     }
+  //   },
+  // });
 
   const handleDisplayResult = () => {
     if (promptValue.trim()) {
@@ -63,8 +84,9 @@ const Hero = () => {
       <div className="flex w-full flex-col justify-between p-4">
         <div className="flex justify-center">
           <div className="w-full max-w-4xl">
-            <div className="mt-4">
+            <div className="mt-4 mb-2">
               <Source sources={sources} isLoading={isPending} />
+              <Answer answer={answer} />
             </div>
           </div>
         </div>
