@@ -14,14 +14,27 @@ const Hero = () => {
   const [promptValue, setPromptValue] = useState("");
   const [sources, setSources] = useState<Source[]>([]);
   const [showResult, setShowResult] = useState(false);
+  const [context, setContext] = useState("");
 
   const mutation = api.source.getSource.useMutation({
     onSuccess: (data) => {
       setSources(data);
+      if (data.length > 0) {
+        const urls = data.map((source) => source.url);
+        GetContext({ urls });
+      }
     },
   });
 
   const { mutate: GetSources, isPending } = mutation;
+
+  const { mutate: GetContext } = api.source.getContext.useMutation({
+    onSuccess: (data) => {
+      const combinedContext = data.map((c) => c.context).join("\n\n");
+      setContext(combinedContext);
+      console.log(context)
+    },
+  });
 
   const handleDisplayResult = () => {
     if (promptValue.trim()) {

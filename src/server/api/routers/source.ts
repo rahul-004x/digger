@@ -28,32 +28,42 @@ export const sourceRouter = createTRPCRouter({
       }));
     }),
 
-  getAnswer: publicProcedure
+  getContext: publicProcedure
     .input(z.object({ urls: z.array(z.string()) }))
     .mutation(async ({ input }) => {
-      let answers = await Promise.all(
+      let context = await Promise.all(
         input.urls.map(async (url: string) => {
-          const response = await fetch(url);
-          const html = await response.text();
+          try {
+            const response = await fetch(url);
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const html = await response.text();
 
-          const virtualConsole = new jsdom.VirtualConsole();
-          const dom = new JSDOM(html, { virtualConsole });
+            const virtualConsole = new jsdom.VirtualConsole();
+            const dom = new JSDOM(html, { virtualConsole });
 
-          const reader = new Readability(dom.window.document);
-          const article = reader.parse();
+            const reader = new Readability(dom.window.document);
+            const article = reader.parse();
 
-          let cleanText = article?.textContent || "No content found";
-          cleanText = cleanText
-            .replace(/\n\s*\n\s*\n/g, "\n\n")
-            .replace(/[ \t]{2,}/g, " ")
-            .replace(/^\s+|\s+$/gm, "")
-            .trim();
+            let cleanText = article?.textContent || "No content found";
+            cleanText = cleanText
+              .replace(/\n\s*\n\s*\n/g, "\n\n")
+              .replace(/[ \t]{2,}/g, " ")
+              .replace(/^\s+|\s+$/gm, "")
+              .trim();
 
-          return {
-            answer: cleanText,
-          };
+            return {
+              context: cleanText,
+            };
+          } catch (error) {
+            console.error(`Failed to fetch or parse ${url}:`, error);
+            return {
+              context: `Could not retrieve content from ${url}`,
+            };
+          }
         }),
       );
-      return answers;
+      return context;
     }),
 });
