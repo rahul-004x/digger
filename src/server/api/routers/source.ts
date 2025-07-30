@@ -15,6 +15,18 @@ const openRouterClient = new openAI({
   apiKey: process.env.OPENROUTER_API_KEY,
 });
 
+const cleanedText = (text: string) => {
+  let newText = text
+    .trim()
+    .replace(/(\n){4,}/g, "\n\n\n")
+    .replace(/\n\n/g, " ")
+    .replace(/ {3,}/g, "  ")
+    .replace(/\t/g, "")
+    .replace(/\n+(\s*\n)*/g, "\n");
+
+  return newText.substring(0, 20000);
+};
+
 export const sourceRouter = createTRPCRouter({
   getSource: publicProcedure
     .input(z.object({ question: z.string() }))
@@ -53,15 +65,7 @@ export const sourceRouter = createTRPCRouter({
             const article = reader.parse();
 
             let cleanText = article?.textContent || "No content found";
-            cleanText = cleanText
-              .replace(/\n\s*\n\s*\n/g, "\n\n")
-              .replace(/[ \t]{2,}/g, " ")
-              .replace(/^\s+|\s+$/gm, "")
-              .trim();
-
-            return {
-              context: cleanText,
-            };
+            cleanText = cleanedText(cleanText);
           } catch (error) {
             console.error(`Failed to fetch or parse ${url}:`, error);
             return {
@@ -78,7 +82,7 @@ export const sourceRouter = createTRPCRouter({
 
   Remember, don't blindly repeat the contexts verbatim and don't tell the user how you used the citations – just respond with the answer. It is very important for my career that you follow these instructions. Here is the user question:
     `;
-      const combinedContext = context.map((item) => item.context).join("\n\n");
+      const combinedContext = context.map((item) => item?.context).join("\n\n");
       const completions = await openRouterClient.chat.completions.create({
         model: "moonshotai/kimi-k2:free",
         messages: [
