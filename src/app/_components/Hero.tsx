@@ -3,6 +3,7 @@
 import { useState } from "react";
 import InputArea from "./InputArea";
 import { api } from "@/trpc/react";
+import Source from "./Source";
 
 type Source = {
   name: string;
@@ -20,7 +21,7 @@ const Hero = () => {
     },
   });
 
-  const { mutate: GetSources } = mutation;
+  const { mutate: GetSources, isPending } = mutation;
 
   const handleDisplayResult = () => {
     if (promptValue.trim()) {
@@ -45,27 +46,12 @@ const Hero = () => {
   }
 
   return (
-    <div className="mx-auto flex h-screen w-full max-w-7xl">
+    <div className="mx-auto flex h-screen w-full">
       <div className="flex w-full flex-col justify-between p-4">
         <div className="flex justify-center">
           <div className="w-full max-w-2xl">
-            <h1 className="text-lg">{promptValue}</h1>
-            {promptValue && (
-              <div className="my-2 w-full border-b-2 border-gray-300" />
-            )}
             <div className="mt-4">
-              {sources.map((source, index) => (
-                <div key={index} className="mb-2 rounded-md border p-2">
-                  <a
-                    href={source.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:underline"
-                  >
-                    {source.name}
-                  </a>
-                </div>
-              ))}
+              <Source sources={sources} isLoading={isPending} />
             </div>
           </div>
         </div>
