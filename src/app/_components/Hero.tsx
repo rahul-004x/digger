@@ -46,10 +46,10 @@ const Hero = () => {
   }
 
   return (
-    <div className="mx-auto flex h-screen w-full">
+    <div className="container mx-auto flex h-screen w-full">
       <div className="flex w-full flex-col justify-between p-4">
         <div className="flex justify-center">
-          <div className="w-full max-w-2xl">
+          <div className="w-full max-w-4xl">
             <div className="mt-4">
               <Source sources={sources} isLoading={isPending} />
             </div>
