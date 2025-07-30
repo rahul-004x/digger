@@ -66,6 +66,13 @@ export const sourceRouter = createTRPCRouter({
 
             let cleanText = article?.textContent || "No content found";
             cleanText = cleanedText(cleanText);
+            console.log(
+              `After cleaning (${url}):`,
+              cleanText.substring(0, 100),
+            );
+            return {
+              context: cleanText,
+            };
           } catch (error) {
             console.error(`Failed to fetch or parse ${url}:`, error);
             return {
