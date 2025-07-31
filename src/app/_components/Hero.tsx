@@ -82,9 +82,9 @@ const Hero = () => {
   return (
     <div className="container mx-auto flex h-screen w-full">
       <div className="flex w-full flex-col justify-between p-4">
-        <div className="flex justify-center">
+        <div className="flex flex-col justify-center">
           <div className="w-full max-w-4xl">
-            <div className="mt-4 mb-2">
+            <div className="mt-4 mb-2 flex flex-col gap-4">
               <Source sources={sources} isLoading={isPending} />
               <Answer answer={answer} />
             </div>

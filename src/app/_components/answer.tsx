@@ -1,6 +1,6 @@
 const Answer = ({ answer }: { answer: string }) => {
   return (
-    <div className="w-full h-full py-1.2 flex border border-solid px-3 p-5">
+    <div className="py-1.2 flex h-full w-full rounded-lg border border-solid border-[#C1C1C1] p-5 px-3">
       {answer}
     </div>
   );
