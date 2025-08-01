@@ -1,7 +1,7 @@
 const Answer = ({ answer }: { answer: string }) => {
   return (
     <div className="py-1.2 flex h-full w-full rounded-lg border border-solid border-[#C1C1C1] p-5 px-3">
-      <div className="text-base font-light text-black leading-[152.5%]">
+      <div className="flex-1 text-base leading-[152.5%] font-light text-black">
         {answer ? (
           answer.trim()
         ) : (
