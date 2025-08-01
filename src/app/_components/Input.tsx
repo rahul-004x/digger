@@ -80,7 +80,6 @@ const InputArea: React.FC<TProps> = ({
                 value={promptValue}
                 placeholder=""
                 ref={textareaRef}
-                disabled={disabled}
                 className="w-full resize-none rounded-2xl rounded-b-none border-none bg-black/5 px-4 py-3 leading-[1.2] focus-visible:ring-0"
                 onChange={(e) => {
                   setPromptValue(e.target.value);
@@ -103,13 +102,15 @@ const InputArea: React.FC<TProps> = ({
           <div className="h-12 rounded-b-xl bg-black/5">
             <div className="absolute right-3 bottom-3">
               <button
+                disabled={disabled}
                 className={cn(
                   "rounded-full p-2 transition-colors",
-                  promptValue
-                    ? "bg-black/95 text-white/90"
-                    : "bg-black/5 text-black/40 hover:text-black dark:bg-white/5 dark:text-white/40 dark:hover:text-white",
+                  disabled
+                    ? "cursor-not-allowed bg-black/5 text-black/40 dark:bg-white/5 dark:text-white/40"
+                    : promptValue
+                      ? "bg-black/95 text-white/90"
+                      : "bg-black/5 text-black/40 hover:text-black dark:bg-white/5 dark:text-white/40 dark:hover:text-white",
                 )}
-                disabled={disabled}
               >
                 <Send className="h-4 w-4" />
               </button>

@@ -90,27 +90,12 @@ const Hero = () => {
           </div>
         </div>
         <div className="flex justify-center shadow-lg backdrop:blur-md">
-          {/* <InputArea */}
-          {/*   promptValue={promptValue} */}
-          {/*   setPromptValue={setPromptValue} */}
-          {/*   handleDisplayResult={handleDisplayResult} */}
-          {/*   disabled={isFetching} */}
-          {/* /> */}
-          <form
-            onSubmit={handleDisplayResult}
-            className="container mx-auto max-w-4xl"
-          >
-            <div className="flex-1">
-              <MessageSquare className="" />
-              <Input
-                value={promptValue}
-                onChange={(e) => setPromptValue(e.target.value)}
-                disabled={isFetching}
-                placeholder="Ask anything..."
-                className=""
-              />
-            </div>
-          </form>
+          <InputArea
+            promptValue={promptValue}
+            setPromptValue={setPromptValue}
+            handleDisplayResult={handleDisplayResult}
+            disabled={isFetching}
+          />
         </div>
       </div>
     </div>
