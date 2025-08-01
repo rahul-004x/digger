@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import InputArea from "./Input";
 import { api } from "@/trpc/react";
 import Source from "./Source";
@@ -55,12 +55,12 @@ const Hero = () => {
     setAnswer(ans);
   }, [chunks]);
 
-  const handleDisplayResult = () => {
+  const handleDisplayResult = useCallback(() => {
     if (promptValue.trim()) {
       GetSources({ question: promptValue });
       setShowResult(true);
     }
-  };
+  }, [promptValue, GetSources]);
 
   if (!showResult) {
     return (

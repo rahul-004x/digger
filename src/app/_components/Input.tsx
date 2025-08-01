@@ -1,7 +1,7 @@
 "use client";
 
 import { Textarea } from "@/components/ui/textarea";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, memo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Send } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -13,12 +13,12 @@ export type TProps = {
   handleDisplayResult: () => void;
 };
 
-const InputArea: React.FC<TProps> = ({
+const InputArea = memo(function InputArea({
   promptValue,
   setPromptValue,
   disabled,
   handleDisplayResult,
-}) => {
+}: TProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -120,6 +120,6 @@ const InputArea: React.FC<TProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default InputArea;
