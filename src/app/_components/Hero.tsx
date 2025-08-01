@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import InputArea from "./InputArea";
+import InputArea from "./Input";
 import { api } from "@/trpc/react";
 import Source from "./Source";
 import Answer from "./answer";
+import Input from "./.ui/input";
+import { MessageSquare } from "lucide-react";
 
 type Source = {
   name: string;
@@ -40,22 +42,18 @@ const Hero = () => {
 
   useEffect(() => {
     if (!chunks) return;
+    const context = chunks
+      .filter((c) => c.type === "context")
+      .map((c) => c.data)
+      .join("");
+    setContext(context);
+
     const ans = chunks
       .filter((c) => c.type === "answer")
       .map((c) => c.data)
       .join("");
     setAnswer(ans);
   }, [chunks]);
-
-  // const { mutate: GetContext } = api.source.getContext.useQuery({
-  //   onSuccess: (data) => {
-  //     if (data) {
-  //       const combinedContext = data.context.map((c) => c.context).join("\n\n");
-  //       setContext(combinedContext);
-  //       setAnswer(data.aiAnswer ?? "");
-  //     }
-  //   },
-  // });
 
   const handleDisplayResult = () => {
     if (promptValue.trim()) {
@@ -73,6 +71,7 @@ const Hero = () => {
             promptValue={promptValue}
             setPromptValue={setPromptValue}
             handleDisplayResult={handleDisplayResult}
+            disabled={isFetching}
           />
         </div>
       </div>
@@ -83,19 +82,35 @@ const Hero = () => {
     <div className="container mx-auto flex h-screen w-full">
       <div className="flex w-full flex-col justify-between p-4">
         <div className="flex flex-col justify-center">
-          <div className="w-full max-w-4xl">
+          <div className="mx-auto w-full max-w-4xl">
             <div className="mt-4 mb-2 flex flex-col gap-4">
               <Source sources={sources} isLoading={isPending} />
               <Answer answer={answer} />
             </div>
           </div>
         </div>
-        <div className="flex justify-center">
-          <InputArea
-            promptValue={promptValue}
-            setPromptValue={setPromptValue}
-            handleDisplayResult={handleDisplayResult}
-          />
+        <div className="flex justify-center shadow-lg backdrop:blur-md">
+          {/* <InputArea */}
+          {/*   promptValue={promptValue} */}
+          {/*   setPromptValue={setPromptValue} */}
+          {/*   handleDisplayResult={handleDisplayResult} */}
+          {/*   disabled={isFetching} */}
+          {/* /> */}
+          <form
+            onSubmit={handleDisplayResult}
+            className="container mx-auto max-w-4xl"
+          >
+            <div className="flex-1">
+              <MessageSquare className="" />
+              <Input
+                value={promptValue}
+                onChange={(e) => setPromptValue(e.target.value)}
+                disabled={isFetching}
+                placeholder="Ask anything..."
+                className=""
+              />
+            </div>
+          </form>
         </div>
       </div>
     </div>
