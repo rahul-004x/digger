@@ -11,13 +11,15 @@ export type TProps = {
   setPromptValue: React.Dispatch<React.SetStateAction<string>>;
   disabled?: boolean;
   handleDisplayResult: () => void;
+  reset?: () => void;
 };
 
-const InputArea = memo(function InputArea({
+function Input({
   promptValue,
   setPromptValue,
   disabled,
   handleDisplayResult,
+  reset,
 }: TProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -120,6 +122,6 @@ const InputArea = memo(function InputArea({
       </div>
     </div>
   );
-});
+}
 
-export default InputArea;
+export default memo(Input);

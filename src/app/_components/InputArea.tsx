@@ -60,4 +60,4 @@ const InputArea: React.FC<TInputProps> = ({
   );
 };
 
-export default InputArea;
+export default React.memo(InputArea);

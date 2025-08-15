@@ -5,7 +5,7 @@ import InputArea from "./Input";
 import { api } from "@/trpc/react";
 import Source from "./Source";
 import Answer from "./answer";
-import Input from "./.ui/input";
+import Input from "./InputArea";
 import { MessageSquare } from "lucide-react";
 
 type Source = {
@@ -15,38 +15,38 @@ type Source = {
 
 const Hero = () => {
   const [promptValue, setPromptValue] = useState("");
+  const [submittedPromptValue, setSubmittedPromptValue] = useState("");
   const [sources, setSources] = useState<Source[]>([]);
   const [showResult, setShowResult] = useState(false);
-  const [context, setContext] = useState<string>("");
   const [answer, setAnswer] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
 
   const mutation = api.source.getSource.useMutation({
     onSuccess: (data) => {
       setSources(data);
-      if (data.length > 0) {
-        const urls = data.map((source) => source.url);
-        void api.useUtils().source.getContext.invalidate({ urls });
-      }
     },
   });
 
   const { mutate: GetSources, isPending } = mutation;
 
   const { data: chunks, isFetching } = api.source.getContext.useQuery(
-    { urls: sources.map((s) => s.url) },
+    { urls: sources.map((s) => s.url), question: submittedPromptValue },
     {
-      enabled: sources.length > 0, //only runs when source urls exists
+      enabled: sources.length > 0 && submittedPromptValue !== "", //only runs when source urls exists
       trpc: { abortOnUnmount: false }, // keeps sse open
     },
   );
 
   useEffect(() => {
     if (!chunks) return;
-    const context = chunks
-      .filter((c) => c.type === "context")
-      .map((c) => c.data)
-      .join("");
-    setContext(context);
+
+    const errorChunk = chunks.find((chunk) => chunk.type === "error");
+    if (errorChunk) {
+      setError(errorChunk.data as string);
+      setAnswer(""); // Clear answer on error
+      return; // Stop processing
+    }
+    setError(null); // No error found, clear any previous error.
 
     const ans = chunks
       .filter((c) => c.type === "answer")
@@ -57,10 +57,12 @@ const Hero = () => {
 
   const handleDisplayResult = useCallback(() => {
     if (promptValue.trim()) {
+      setSubmittedPromptValue(promptValue);
       GetSources({ question: promptValue });
       setShowResult(true);
+      setPromptValue("");
     }
-  }, [promptValue, GetSources]);
+  }, [promptValue]);
 
   if (!showResult) {
     return (
@@ -85,11 +87,16 @@ const Hero = () => {
           <div className="mx-auto w-full max-w-4xl">
             <div className="mt-4 mb-2 flex flex-col gap-4">
               <Source sources={sources} isLoading={isPending} />
+              {error && (
+                <div className="rounded-md border border-red-400 bg-red-100 p-4 text-red-500">
+                  {error}
+                </div>
+              )}
               <Answer answer={answer} />
             </div>
           </div>
         </div>
-        <div className="flex justify-center shadow-lg backdrop:blur-md">
+        <div className="flex justify-center ">
           <InputArea
             promptValue={promptValue}
             setPromptValue={setPromptValue}

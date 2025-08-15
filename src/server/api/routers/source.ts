@@ -66,18 +66,8 @@ export const sourceRouter = createTRPCRouter({
     }),
 
   getContext: publicProcedure
-    .input(z.object({ urls: z.array(z.string()) }))
-    .query(async function* ({ input }) {
-      const mainAnswerPrompt = `
-  Given a user question and some context, please write a clean, concise and accurate answer to the question based on the context. You will be given a set of related contexts to the question, each starting with a reference number like [[citation:x]], where x is a number. Please use the context when crafting your answer.
-
-  Your answer must be correct, accurate and written by an expert using an unbiased and professional tone. Please limit to 1024 tokens. Do not give any information that is not related to the question, and do not repeat. Say "information is missing on" followed by the related topic, if the given context do not provide sufficient information.
-
-
-  Remember, don't blindly repeat the contexts verbatim and don't tell the user how you used the citations – just respond with the answer. It is very important for my career that you follow these instructions. Here is the user question:
-    `;
-
-      // 1. fetch & clean pages
+    .input(z.object({ urls: z.array(z.string()), question: z.string() }))
+    .query(async function*({ input }) {
       const context = await Promise.all(
         input.urls.map(async (url) => {
           try {
@@ -87,7 +77,7 @@ export const sourceRouter = createTRPCRouter({
             });
             const text = cleanedText(
               new Readability(dom.window.document).parse()?.textContent ||
-                "No content",
+              "No content",
             );
             return { context: text };
           } catch {
@@ -96,23 +86,47 @@ export const sourceRouter = createTRPCRouter({
         }),
       );
 
-      // 2. yield context object once
-      yield { type: "context", data: context } as const;
-
-      // 3. stream LLM tokens
       const combined = context.map((c) => c.context).join("\n\n");
-      const stream = await openRouterClient.chat.completions.create({
-        model: "moonshotai/kimi-k2:free",
-        messages: [
-          { role: "system", content: mainAnswerPrompt },
-          { role: "user", content: combined },
-        ],
-        stream: true,
-      });
+      const mainAnswerPrompt = `  Given a user question and some context, please write a clean, concise and accurate answer to the question based on the context. You will be given a set of related contexts to the question, each starting with a reference number like [[citation:x]], where x is a link. 
 
-      for await (const chunk of stream) {
-        const token = chunk.choices[0]?.delta?.content;
-        if (token) yield { type: "answer", data: token } as const;
+  Your answer must be correct, accurate and written by an expert using an unbiased and professional tone. Please limit to 1024 tokens. Do not give any information that is not related to the question, and do not repeat. Say "information is missing on" followed by the related topic, if the given context do not provide sufficient information.
+
+  Do not repeat the user's question in your response. Be direct and answer the question.
+  if the user asks for list a of itmes, provide a list with their functions and benefits
+
+  Format your response in Markdown. Use headings, lists, and code blocks for code snippets.
+
+Answer Context:
+${combined}
+
+  
+  Remember, don't blindly repeat the contexts verbatim and don't tell the user how you used the citations – just respond with the answer. It is very important for my career that you follow these instructions. Here is the user question:
+    `;
+
+      try {
+        const stream = await openRouterClient.chat.completions.create({
+          model: "google/gemini-2.0-flash-exp:free",
+          messages: [
+            { role: "system", content: mainAnswerPrompt },
+            {
+              role: "user",
+              content: combined,
+            },
+          ],
+          stream: true,
+        });
+
+        for await (const chunk of stream) {
+          const token = chunk.choices[0]?.delta?.content;
+          if (token) yield { type: "answer", data: token } as const;
+        }
+      } catch (error: any) {
+        console.error("Error calling OpenRouter:", error);
+        const errorMessage = error.message || "An unknown error occurred.";
+        yield {
+          type: "error",
+          data: `Error from AI service: ${errorMessage}`,
+        } as const;
       }
     }),
 });
