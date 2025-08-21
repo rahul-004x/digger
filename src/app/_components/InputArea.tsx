@@ -8,7 +8,7 @@ export type TInputProps = {
   handleDisplayResult: () => void;
 };
 
-const InputArea: React.FC<TInputProps> = ({
+const Input: React.FC<TInputProps> = ({
   promptValue,
   setPromptValue,
   handleDisplayResult,
@@ -60,4 +60,4 @@ const InputArea: React.FC<TInputProps> = ({
   );
 };
 
-export default React.memo(InputArea);
+export default React.memo(Input);

@@ -81,22 +81,22 @@ const Hero = () => {
   }
 
   return (
-    <div className="container mx-auto flex h-screen w-full">
-      <div className="flex w-full flex-col justify-between p-4">
-        <div className="flex flex-col justify-center">
-          <div className="mx-auto w-full max-w-4xl">
-            <div className="mt-4 mb-2 flex flex-col gap-4">
-              <Source sources={sources} isLoading={isPending} />
-              {error && (
-                <div className="rounded-md border border-red-400 bg-red-100 p-4 text-red-500">
-                  {error}
-                </div>
-              )}
-              <Answer answer={answer} />
-            </div>
+    <div className="container mx-auto flex h-screen w-full flex-col p-4">
+      <div className="flex-grow overflow-y-auto">
+        <div className="mx-auto w-full max-w-4xl">
+          <div className="mt-4 mb-2 flex flex-col gap-4">
+            <Source sources={sources} isLoading={isPending} />
+            {error && (
+              <div className="rounded-md border border-red-400 bg-red-100 p-4 text-red-500">
+                {error}
+              </div>
+            )}
+            <Answer answer={answer} />
           </div>
         </div>
-        <div className="flex justify-center ">
+      </div>
+      <div className="flex-shrink-0">
+        <div className="flex justify-center">
           <InputArea
             promptValue={promptValue}
             setPromptValue={setPromptValue}

@@ -110,7 +110,7 @@ ${combined}
             { role: "system", content: mainAnswerPrompt },
             {
               role: "user",
-              content: combined,
+              content: input.question,
             },
           ],
           stream: true,

@@ -51,7 +51,7 @@ function Input({
   }, []);
 
   const MIN_HEIGHT = 48;
-  const MAX_HEIGHT = 164;
+  const MAX_HEIGHT = 200;
 
   const AnimatePlaceholder = () => (
     <AnimatePresence mode="wait">
@@ -70,7 +70,7 @@ function Input({
 
   return (
     <div className="w-full">
-      <div className="mx-auto w-full max-w-xl rounded-[22px] border border-black/5 p-1">
+      <div className="mx-auto w-full max-w-2xl rounded-[22px] border border-black/5 p-1">
         <div className="relative rounded-2xl border border-black/5 bg-neutral-800/5">
           <div
             className="overflow-y-auto"
