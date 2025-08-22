@@ -12,6 +12,8 @@ export type TProps = {
   disabled?: boolean;
   handleDisplayResult: () => void;
   reset?: () => void;
+  style?: string;
+  top: string
 };
 
 function Input({
@@ -19,7 +21,8 @@ function Input({
   setPromptValue,
   disabled,
   handleDisplayResult,
-  reset,
+  style,
+  top
 }: TProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -50,7 +53,6 @@ function Input({
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
-  const MIN_HEIGHT = 48;
   const MAX_HEIGHT = 200;
 
   const AnimatePlaceholder = () => (
@@ -95,13 +97,13 @@ function Input({
                 }}
               />
               {!promptValue && (
-                <div className="absolute top-3 left-4">
+                <div className={cn("absolute left-4", top)}>
                   <AnimatePlaceholder />
                 </div>
               )}
             </div>
           </div>
-          <div className="h-12 rounded-b-xl bg-black/5">
+          <div className={style}>
             <div className="absolute right-3 bottom-3">
               <button
                 disabled={disabled}

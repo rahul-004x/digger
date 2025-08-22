@@ -74,6 +74,8 @@ const Hero = () => {
             setPromptValue={setPromptValue}
             handleDisplayResult={handleDisplayResult}
             disabled={isFetching}
+            style="h-12 rounded-md bg-black/5"
+            top="top-3"
           />
         </div>
       </div>
@@ -102,6 +104,7 @@ const Hero = () => {
             setPromptValue={setPromptValue}
             handleDisplayResult={handleDisplayResult}
             disabled={isFetching}
+            top="top-5"
           />
         </div>
       </div>

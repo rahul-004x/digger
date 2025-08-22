@@ -1,4 +1,3 @@
-import ReactMarkdown from "react-markdown";
 import { Streamdown } from "streamdown";
 
 const Answer = ({ answer }: { answer: string }) => {

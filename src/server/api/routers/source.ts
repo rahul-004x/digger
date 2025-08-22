@@ -16,7 +16,7 @@ const openRouterClient = new openAI({
 });
 
 const cleanedText = (text: string) => {
-  let newText = text
+  const newText = text
     .trim()
     .replace(/(\n){4,}/g, "\n\n\n")
     .replace(/\n\n/g, " ")
