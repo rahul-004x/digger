@@ -5,8 +5,6 @@ import InputArea from "./Input";
 import { api } from "@/trpc/react";
 import Source from "./Source";
 import Answer from "./answer";
-import Input from "./InputArea";
-import { MessageSquare } from "lucide-react";
 
 type Source = {
   name: string;
@@ -62,7 +60,7 @@ const Hero = () => {
       setShowResult(true);
       setPromptValue("");
     }
-  }, [promptValue]);
+  }, [promptValue, GetSources]);
 
   if (!showResult) {
     return (
