@@ -2,7 +2,7 @@ import { Streamdown } from "streamdown";
 
 const Answer = ({ answer }: { answer: string }) => {
   return (
-    <div className="py-1.2 flex h-full w-full rounded-lg border border-solid border-[#C1C1C1] p-5 px-3">
+    <div className="py-1.2 flex max-w-3xl items-center justify-center h-full w-full rounded-lg border border-solid border-[#C1C1C1] p-5 px-3"> 
       <div className="flex-1 text-base leading-[152.5%] font-light text-black">
         {answer ? (
           <Streamdown>{answer}</Streamdown>

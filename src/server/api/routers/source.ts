@@ -94,7 +94,7 @@ export const sourceRouter = createTRPCRouter({
   Do not repeat the user's question in your response. Be direct and answer the question.
   if the user asks for list a of itmes, provide a list with their functions and benefits
 
-  Format your response in Markdown. Use headings, lists, and code blocks for code snippets.
+  Format your response in Markdown, Use clear headings with different sizes and font to organize sections, Include code snippets in fenced code blocks, Use bold or italics to highlight key points, Add tables for structured data when relevant, Keep paragraphs concise and split long explanations into smaller sections.
 
 Answer Context:
 ${combined}
