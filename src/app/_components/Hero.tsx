@@ -86,7 +86,6 @@ const Hero = () => {
     <div className="flex-grow overflow-y-auto">
       <div className="mx-auto w-full max-w-3xl">
         <div className="mt-4 mb-2 flex flex-col gap-4">
-          {/* <Source sources={sources} isLoading={isPending} /> */}
           <div className="flex items-center gap-2 bg-black/5 border rounded-md p-3">
             <MessageSquare size={20} />
             <span className="font-semibold">{submittedPromptValue}</span>
