@@ -2,9 +2,15 @@ import { z } from "zod";
 import { Readability } from "@mozilla/readability";
 import jsdom, { JSDOM } from "jsdom";
 
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  protectedProcedure,
+} from "@/server/api/trpc";
 import { tavily } from "@tavily/core";
 import openAI from "openai";
+import { conversation, messages } from "@/server/db/schema";
+
 
 const tavilyClient = tavily({
   apiKey: process.env.TAVILY_API_KEY,
@@ -47,9 +53,46 @@ async function fetchWithTimeout(url: string, timeout = 3000) {
 }
 
 export const sourceRouter = createTRPCRouter({
-  getSource: publicProcedure
-    .input(z.object({ question: z.string() }))
-    .mutation(async ({ input }) => {
+  getSource: protectedProcedure
+    .input(
+      z.object({
+        question: z.string(),
+        conversationId: z.string().uuid().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      let convId = input.conversationId;
+      let newConversationName: string | null = null;
+      if (!convId) {
+        const nameResponse = await openRouterClient.chat.completions.create({
+          model: "google/gemini-2.0-flash-exp:free",
+          messages: [
+            {
+              role: "system",
+              content:
+                "Generate a short, concise title (4-5) words for a conversation that start with this user question. Do not include quotation marks in the title.",
+            },
+            { role: "user", content: input.question },
+          ],
+        });
+        const generatedName =
+          nameResponse.choices[0]?.message?.content?.trim() ??
+          "New conversation";
+        newConversationName = generatedName;
+
+        const [newConversation] = await ctx.db
+          .insert(conversation)
+          .values({
+            name: generatedName,
+            clerkUserId: ctx.userId,
+          })
+          .returning();
+
+        if (!newConversation) {
+          throw new Error("Could not create a new conversation.");
+        }
+        convId = newConversation.id;
+      }
       const response = await tavilyClient.search(input.question, {
         searchDepth: "basic",
         maxResults: 6,
@@ -65,7 +108,7 @@ export const sourceRouter = createTRPCRouter({
       }));
     }),
 
-  getContext: publicProcedure
+  getContext: protectedProcedure
     .input(z.object({ urls: z.array(z.string()), question: z.string() }))
     .query(async function*({ input }) {
       const context = await Promise.all(
@@ -76,7 +119,7 @@ export const sourceRouter = createTRPCRouter({
               virtualConsole: new jsdom.VirtualConsole(),
             });
             const text = cleanedText(
-              new Readability(dom.window.document).parse()?.textContent ||
+              new Readability(dom.window.document).parse()?.textContent ??
               "No content",
             );
             return { context: text };
@@ -120,9 +163,10 @@ ${combined}
           const token = chunk.choices[0]?.delta?.content;
           if (token) yield { type: "answer", data: token } as const;
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Error calling OpenRouter:", error);
-        const errorMessage = error.message || "An unknown error occurred.";
+        const errorMessage =
+          error instanceof Error ? error.message : "An unknown error occurred.";
         yield {
           type: "error",
           data: `Error from AI service: ${errorMessage}`,
