@@ -107,6 +107,7 @@ function Input({
             <div className="absolute right-3 bottom-3">
               <button
                 disabled={disabled}
+                onClick={handleDisplayResult}
                 className={cn(
                   "rounded-full p-2 transition-colors",
                   disabled
