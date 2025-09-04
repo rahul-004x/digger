@@ -1,90 +1,141 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import InputArea from "./Input";
-import { api } from "@/trpc/react";
-import Source from "./Source";
-import Answer from "./answer";
-import { MessageSquare } from "lucide-react";
-import { UserButton } from "@clerk/nextjs";
-import Sidebar from "./sidebar";
 import { useSearchParams } from "next/navigation";
+import { api } from "@/trpc/react";
+import { MessageSquare } from "lucide-react";
+
+import InputArea from "./Input";
+import Answer from "./answer";
+import Sidebar from "./sidebar";
+import { UserButton } from "@clerk/nextjs";
 
 type Source = {
-  name: string;
+  title: string;
   url: string;
 };
-type Messages = {
+type Message = {
   role: "user" | "assistant";
-  contet: string;
-  sources: Source[];
+  content: string;
+  sources?: Source[];
 };
 
 const Main = () => {
+  // --- State Management ---
   const [promptValue, setPromptValue] = useState("");
-  const [submittedPromptValue, setSubmittedPromptValue] = useState("");
-  const [sources, setSources] = useState<Source[]>([]);
-  const [showResult, setShowResult] = useState(false);
-  const [answer, setAnswer] = useState<string>("");
-  const [error, setError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | undefined>();
-  const [messages, setMessages] = useState<Messages[]>([])
 
-  const searchParams = useSearchParams()
+  // State to control the streaming query
+  const [currentQuestion, setCurrentQuestion] = useState("");
+  const [sources, setSources] = useState<Source[]>([]);
+  const [isContextQueryEnabled, setIsContextQueryEnabled] = useState(false);
+
+  // --- tRPC Hooks ---
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const convId = searchParams.get("conversationId") ?? undefined;
     setConversationId(convId);
-    //if the setConversationId changes, clear the messages
-    setMessages([])
-  }, [searchParams])
+    setMessages([]); // Clear messages when conversation changes
+    setIsContextQueryEnabled(false); // Disable query for new conversation
+  }, [searchParams]);
 
-  // Fetch messages history if the conversations exists
+  const { data: initialMessages, isLoading: isHistoryLoading } = api.db.getMessages.useQuery(
+    { conversationId: conversationId! },
+    { enabled: !!conversationId && messages.length === 0 } // Only run if ID exists and messages are not loaded
+  );
 
-  const mutation = api.source.getSource.useMutation({
+  useEffect(() => {
+    if (initialMessages) {
+      const historyMessages = initialMessages.map((msg) => ({
+        role: msg.role as "user" | "assistant",
+        content: msg.content,
+        sources: (msg.sources as Source[]) || undefined,
+      }));
+      setMessages(historyMessages);
+    }
+  }, [initialMessages]);
+
+  const getSourceMutation = api.source.getSource.useMutation({
     onSuccess: (data) => {
-      setSources(data);
+      if (data.conversationId && !conversationId) {
+        setConversationId(data.conversationId);
+        window.history.pushState(null, "", `?conversationId=${data.conversationId}`);
+      }
+      setSources(data.sources);
+      setIsContextQueryEnabled(true); // IMPORTANT: Enable the getContext query now
     },
   });
 
-  const { mutate: GetSources, isPending } = mutation;
-
-  const { data: chunks, isFetching } = api.source.getContext.useQuery(
-    { urls: sources.map((s) => s.url), question: submittedPromptValue },
+  const { data: chunks, isFetching: isContextFetching } = api.source.getContext.useQuery(
     {
-      enabled: sources.length > 0 && submittedPromptValue !== "", //only runs when source urls exists
-      trpc: { abortOnUnmount: false }, // keeps sse open
+      sources: sources,
+      question: currentQuestion,
+      conversationId: conversationId!,
     },
+    {
+      enabled: isContextQueryEnabled,
+      refetchOnWindowFocus: false,
+      trpc: { abortOnUnmount: true },
+    }
   );
 
   useEffect(() => {
     if (!chunks) return;
 
-    const errorChunk = chunks.find((chunk) => chunk.type === "error");
-    if (errorChunk) {
-      setError(errorChunk.data as string);
-      setAnswer(""); // Clear answer on error
-      return; // Stop processing
-    }
-    setError(null); // No error found, clear any previous error.
+    const errorChunk = chunks.find((chunk: any) => chunk.type === "error");
 
-    const ans = chunks
+    if (errorChunk) {
+      console.error("Streaming Error:", errorChunk.data);
+      setMessages((prev) => {
+        const newMessages = [...prev];
+        const lastMsg = newMessages[newMessages.length - 1];
+        if (lastMsg && lastMsg.role === "assistant") {
+          lastMsg.content = `An error occurred: ${errorChunk.data}`;
+        }
+        return newMessages;
+      });
+      return;
+    }
+    const newAnswer = chunks
       .filter((c) => c.type === "answer")
       .map((c) => c.data)
       .join("");
-    setAnswer(ans);
+
+    setMessages((prev) => {
+      const newMessages = [...prev];
+      const lastMsg = newMessages[newMessages.length - 1];
+      if (lastMsg && lastMsg.role === "assistant") {
+        lastMsg.content = newAnswer;
+      }
+      return newMessages;
+    });
   }, [chunks]);
 
   const handleDisplayResult = useCallback(() => {
     if (promptValue.trim()) {
-      setSubmittedPromptValue(promptValue);
-      GetSources({ question: promptValue });
-      setShowResult(true);
+      const newQuestion = promptValue;
+
+      setIsContextQueryEnabled(false);
+      setSources([]);
+      setCurrentQuestion(newQuestion);
+
+      setMessages((prev) => [
+        ...prev,
+        { role: "user", content: newQuestion },
+        { role: "assistant", content: "" },
+      ]);
+
+      getSourceMutation.mutate({ question: newQuestion, conversationId });
       setPromptValue("");
     }
-  }, [promptValue, GetSources]);
+  }, [promptValue, conversationId, getSourceMutation]);
 
-  if (!showResult) {
+  const isLoading = getSourceMutation.isPending || isContextFetching;
+  const showChatView = messages.length > 0 || isHistoryLoading;
+
+  if (!showChatView && !isHistoryLoading) {
     return (
       <div className="flex h-screen flex-col items-center justify-center">
         <div className="absolute top-3 right-3">
@@ -99,7 +150,7 @@ const Main = () => {
             promptValue={promptValue}
             setPromptValue={setPromptValue}
             handleDisplayResult={handleDisplayResult}
-            disabled={isFetching}
+            disabled={isLoading}
             style="h-12 rounded-md bg-black/5"
             top="top-3"
           />
@@ -118,18 +169,19 @@ const Main = () => {
       </div>
       <div className="flex-grow overflow-y-auto">
         <div className="mx-auto w-full max-w-3xl">
-          <div className="mt-4 mb-2 flex flex-col gap-4">
-            <div className="flex items-center gap-2 rounded-md border bg-black/5 p-3">
-              <MessageSquare size={20} />
-              <span className="font-semibold">{submittedPromptValue}</span>
+          {isHistoryLoading && messages.length === 0 && <p>Loading conversation...</p>}
+          {messages.map((msg, index) => (
+            <div key={index} className="mt-4 mb-2 flex flex-col gap-4">
+              {msg.role === "user" ? (
+                <div className="flex items-center gap-2 rounded-md border bg-black/5 p-3">
+                  <MessageSquare size={20} />
+                  <span className="font-semibold">{msg.content}</span>
+                </div>
+              ) : (
+                <Answer answer={msg.content} />
+              )}
             </div>
-            {error && (
-              <div className="rounded-md border border-red-400 bg-red-100 p-4 text-red-500">
-                {error}
-              </div>
-            )}
-            <Answer answer={answer} />
-          </div>
+          ))}
         </div>
       </div>
       <div className="flex-shrink-0">
@@ -138,7 +190,7 @@ const Main = () => {
             promptValue={promptValue}
             setPromptValue={setPromptValue}
             handleDisplayResult={handleDisplayResult}
-            disabled={isFetching}
+            disabled={isLoading}
             top="top-5"
           />
         </div>

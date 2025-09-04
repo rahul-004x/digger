@@ -132,7 +132,7 @@ export const sourceRouter = createTRPCRouter({
         conversationId: z.string().uuid(),
       }),
     )
-    .mutation(async function* ({ ctx, input }) {
+    .query(async function* ({ ctx, input }) {
       const urls = input.sources.map((s) => s.url);
       const context = await Promise.all(
         urls.map(async (url) => {
