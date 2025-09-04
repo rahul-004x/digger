@@ -8,10 +8,16 @@ import Answer from "./answer";
 import { MessageSquare } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import Sidebar from "./sidebar";
+import { useSearchParams } from "next/navigation";
 
 type Source = {
   name: string;
   url: string;
+};
+type Messages = {
+  role: "user" | "assistant";
+  contet: string;
+  sources: Source[];
 };
 
 const Main = () => {
@@ -21,6 +27,19 @@ const Main = () => {
   const [showResult, setShowResult] = useState(false);
   const [answer, setAnswer] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | undefined>();
+  const [messages, setMessages] = useState<Messages[]>([])
+
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const convId = searchParams.get("conversationId") ?? undefined;
+    setConversationId(convId);
+    //if the setConversationId changes, clear the messages
+    setMessages([])
+  }, [searchParams])
+
+  // Fetch messages history if the conversations exists
 
   const mutation = api.source.getSource.useMutation({
     onSuccess: (data) => {

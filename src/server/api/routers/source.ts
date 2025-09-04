@@ -10,7 +10,7 @@ import {
 import { tavily } from "@tavily/core";
 import openAI from "openai";
 import { conversation, messages } from "@/server/db/schema";
-
+import { sources } from "next/dist/compiled/webpack/webpack";
 
 const tavilyClient = tavily({
   apiKey: process.env.TAVILY_API_KEY,
@@ -93,6 +93,12 @@ export const sourceRouter = createTRPCRouter({
         }
         convId = newConversation.id;
       }
+      await ctx.db.insert(messages).values({
+        conversationId: convId,
+        role: "user",
+        content: input.question,
+      });
+
       const response = await tavilyClient.search(input.question, {
         searchDepth: "basic",
         maxResults: 6,
@@ -100,19 +106,36 @@ export const sourceRouter = createTRPCRouter({
         includeRawContent: false,
       });
       if (!response?.results) {
-        return [];
+        // Return an empty sources array but includes the conversationId
+        return {
+          sources: [],
+          conversationId: convId,
+          newConversationName,
+        };
       }
-      return response.results.slice(0, 6).map((result: any) => ({
-        name: result.title || "Untitled",
+      const sources = response.results.slice(0, 6).map((result: any) => ({
+        title: result.title || "Untitled",
         url: result.url,
       }));
+      return {
+        sources,
+        conversationId: convId,
+        newConversationName,
+      };
     }),
 
   getContext: protectedProcedure
-    .input(z.object({ urls: z.array(z.string()), question: z.string() }))
-    .query(async function*({ input }) {
+    .input(
+      z.object({
+        question: z.string(),
+        sources: z.array(z.object({ title: z.string(), url: z.string() })),
+        conversationId: z.string().uuid(),
+      }),
+    )
+    .mutation(async function* ({ ctx, input }) {
+      const urls = input.sources.map((s) => s.url);
       const context = await Promise.all(
-        input.urls.map(async (url) => {
+        urls.map(async (url) => {
           try {
             const html = await (await fetchWithTimeout(url)).text();
             const dom = new JSDOM(html, {
@@ -120,7 +143,7 @@ export const sourceRouter = createTRPCRouter({
             });
             const text = cleanedText(
               new Readability(dom.window.document).parse()?.textContent ??
-              "No content",
+                "No content",
             );
             return { context: text };
           } catch {
@@ -159,9 +182,21 @@ ${combined}
           stream: true,
         });
 
+        let fullResonse = "";
         for await (const chunk of stream) {
           const token = chunk.choices[0]?.delta?.content;
-          if (token) yield { type: "answer", data: token } as const;
+          if (token) {
+            fullResonse += token;
+            yield { type: "answer", data: token } as const;
+          }
+        }
+        if (fullResonse) {
+          await ctx.db.insert(messages).values({
+            conversationId: input.conversationId,
+            role: "assistant",
+            content: fullResonse,
+            sources: input.sources,
+          });
         }
       } catch (error: unknown) {
         console.error("Error calling OpenRouter:", error);

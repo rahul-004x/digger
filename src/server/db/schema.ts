@@ -23,13 +23,8 @@ export const messages = createTable("messages", {
   conversationId: uuid("conversation_id")
     .notNull()
     .references(() => conversation.id, { onDelete: "cascade" }),
-
-  // Store role + content together as JSON
-  payload: jsonb("payload").$type<{
-    role: "user" | "assistant" | "system";
-    content: string;
-  }[]>(),
-
+  role: text("role", { enum: ["user", "assistant", "system"] }).notNull(),
+  content: text("content").notNull(),
   sources: jsonb().$type<
     {
       url: string;
