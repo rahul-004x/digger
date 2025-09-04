@@ -9,6 +9,8 @@ import InputArea from "./Input";
 import Answer from "./answer";
 import Sidebar from "./sidebar";
 import { UserButton } from "@clerk/nextjs";
+import { Loader } from "@/components/ai-elements/loader";
+import { ms } from "zod/v4/locales";
 
 type Source = {
   title: string;
@@ -33,6 +35,7 @@ const Main = () => {
 
   // --- tRPC Hooks ---
   const searchParams = useSearchParams();
+  const utils = api.useUtils();
 
   useEffect(() => {
     const convId = searchParams.get("conversationId") ?? undefined;
@@ -41,10 +44,11 @@ const Main = () => {
     setIsContextQueryEnabled(false); // Disable query for new conversation
   }, [searchParams]);
 
-  const { data: initialMessages, isLoading: isHistoryLoading } = api.db.getMessages.useQuery(
-    { conversationId: conversationId! },
-    { enabled: !!conversationId && messages.length === 0 } // Only run if ID exists and messages are not loaded
-  );
+  const { data: initialMessages, isLoading: isHistoryLoading } =
+    api.db.getMessages.useQuery(
+      { conversationId: conversationId! },
+      { enabled: !!conversationId && messages.length === 0 }, // Only run if ID exists and messages are not loaded
+    );
 
   useEffect(() => {
     if (initialMessages) {
@@ -58,28 +62,34 @@ const Main = () => {
   }, [initialMessages]);
 
   const getSourceMutation = api.source.getSource.useMutation({
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       if (data.conversationId && !conversationId) {
         setConversationId(data.conversationId);
-        window.history.pushState(null, "", `?conversationId=${data.conversationId}`);
+        window.history.pushState(
+          null,
+          "",
+          `?conversationId=${data.conversationId}`,
+        );
+        await utils.db.getConversations.invalidate();
       }
       setSources(data.sources);
       setIsContextQueryEnabled(true); // IMPORTANT: Enable the getContext query now
     },
   });
 
-  const { data: chunks, isFetching: isContextFetching } = api.source.getContext.useQuery(
-    {
-      sources: sources,
-      question: currentQuestion,
-      conversationId: conversationId!,
-    },
-    {
-      enabled: isContextQueryEnabled,
-      refetchOnWindowFocus: false,
-      trpc: { abortOnUnmount: true },
-    }
-  );
+  const { data: chunks, isFetching: isContextFetching } =
+    api.source.getContext.useQuery(
+      {
+        sources: sources,
+        question: currentQuestion,
+        conversationId: conversationId!,
+      },
+      {
+        enabled: isContextQueryEnabled,
+        refetchOnWindowFocus: false,
+        trpc: { abortOnUnmount: true },
+      },
+    );
 
   useEffect(() => {
     if (!chunks) return;
@@ -89,12 +99,17 @@ const Main = () => {
     if (errorChunk) {
       console.error("Streaming Error:", errorChunk.data);
       setMessages((prev) => {
-        const newMessages = [...prev];
-        const lastMsg = newMessages[newMessages.length - 1];
-        if (lastMsg && lastMsg.role === "assistant") {
-          lastMsg.content = `An error occurred: ${errorChunk.data}`;
+        const lastMsg = prev[prev.length - 1];
+        if (lastMsg?.role === "assistant") {
+          return [
+            ...prev.slice(0, -1),
+            {
+              ...lastMsg,
+              content: `An error occurred: ${errorChunk.data}`,
+            },
+          ];
         }
-        return newMessages;
+        return prev;
       });
       return;
     }
@@ -104,12 +119,14 @@ const Main = () => {
       .join("");
 
     setMessages((prev) => {
-      const newMessages = [...prev];
-      const lastMsg = newMessages[newMessages.length - 1];
-      if (lastMsg && lastMsg.role === "assistant") {
-        lastMsg.content = newAnswer;
+      const lastMsg = prev[prev.length - 1];
+      if (lastMsg?.role === "assistant") {
+        return [
+          ...prev.slice(0, -1),
+          { ...lastMsg, content: newAnswer },
+        ];
       }
-      return newMessages;
+      return prev;
     });
   }, [chunks]);
 
@@ -169,7 +186,7 @@ const Main = () => {
       </div>
       <div className="flex-grow overflow-y-auto">
         <div className="mx-auto w-full max-w-3xl">
-          {isHistoryLoading && messages.length === 0 && <p>Loading conversation...</p>}
+            {isHistoryLoading && messages.length === 0 && <Loader className="flex justify-center items-center h-screen"/>}
           {messages.map((msg, index) => (
             <div key={index} className="mt-4 mb-2 flex flex-col gap-4">
               {msg.role === "user" ? (
