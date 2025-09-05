@@ -32,8 +32,8 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="w-64 p-4 rounded-md bg-gray-50 min-h-screen">
-      <h2 className="text-xl font-bold mb-4 pl-18">Digger</h2>
+    <div className="w-64 p-4 rounded-md bg-gray-50 h-full">
+      <h2 className="text-xl font-bold mb-4 ml-19">Digger</h2>
       <button 
         className="px-4 py-2 w-full bg-black text-white rounded-md hover:bg-gray-800 mb-4"
         onClick={handleNewChat}
@@ -42,16 +42,16 @@ const Sidebar = () => {
       </button>
       
       <div className="mt-6">
-        <h3 className="text-sm font-medium text-gray-500 mb-2 pl-2">Recent Conversations</h3>
+        <h3 className="text-sm font-medium text-gray-500 mb-2">Recent Conversations</h3>
         <div className="space-y-1 max-h-[calc(100vh-180px)] overflow-y-auto">
           {isLoading ? (
           <div className="flex w-full flex-col gap-1">
-              <div className="h-4 w-full rounded-l bg-gray-300 animate-pulse"></div>
-              <div className="h-4 w-full rounded-l bg-gray-300 animate-pulse"></div>
-              <div className="h-4 w-full rounded-l bg-gray-300 animate-pulse"></div>
+              <div className="h-4 w-full rounded bg-gray-300 animate-pulse"></div>
+              <div className="h-4 w-full rounded bg-gray-300 animate-pulse"></div>
+              <div className="h-4 w-full rounded bg-gray-300 animate-pulse"></div>
             </div>
           ) : conversations.length === 0 ? (
-            <p className="text-sm text-gray-500 pl-2">No conversations yet</p>
+            <p className="text-sm text-gray-500">No conversations yet</p>
           ) : (
             conversations.map((conversation) => (
               <div 

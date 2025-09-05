@@ -1,21 +1,26 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/trpc/react";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, ChevronDown } from "lucide-react";
 
 import InputArea from "./Input";
 import Answer from "./answer";
 import Sidebar from "./sidebar";
 import { UserButton } from "@clerk/nextjs";
 import { Loader } from "@/components/ai-elements/loader";
-import { ms } from "zod/v4/locales";
 
 type Source = {
   title: string;
   url: string;
 };
+
+type chunk = {
+  data: string,
+  type: string
+}
+
 type Message = {
   role: "user" | "assistant";
   content: string;
@@ -23,15 +28,33 @@ type Message = {
 };
 
 const Main = () => {
-  // --- State Management ---
   const [promptValue, setPromptValue] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | undefined>();
+
+  // Auto-scroll refs and state
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [userScrolledUp, setUserScrolledUp] = useState(false);
 
   // State to control the streaming query
   const [currentQuestion, setCurrentQuestion] = useState("");
   const [sources, setSources] = useState<Source[]>([]);
   const [isContextQueryEnabled, setIsContextQueryEnabled] = useState(false);
+
+  // Auto-scroll functions
+  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const isAtBottom = () => {
+    const container = containerRef.current;
+    if (!container) return true;
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    return scrollHeight - scrollTop - clientHeight < 100;
+  };
+
+  // Auto-scroll when messages change
+  useEffect(() => {
+    if (messages.length > 0 && !userScrolledUp) scrollToBottom();
+  }, [messages, userScrolledUp]);
 
   // --- tRPC Hooks ---
   const searchParams = useSearchParams();
@@ -94,7 +117,7 @@ const Main = () => {
   useEffect(() => {
     if (!chunks) return;
 
-    const errorChunk = chunks.find((chunk: any) => chunk.type === "error");
+    const errorChunk = chunks.find((chunk: chunk) => chunk.type === "error");
 
     if (errorChunk) {
       console.error("Streaming Error:", errorChunk.data);
@@ -121,14 +144,16 @@ const Main = () => {
     setMessages((prev) => {
       const lastMsg = prev[prev.length - 1];
       if (lastMsg?.role === "assistant") {
-        return [
-          ...prev.slice(0, -1),
-          { ...lastMsg, content: newAnswer },
-        ];
+        return [...prev.slice(0, -1), { ...lastMsg, content: newAnswer }];
       }
       return prev;
     });
-  }, [chunks]);
+
+    // Auto-scroll during streaming
+    if (chunks.some((c) => c.type === "answer") && !userScrolledUp) {
+      setTimeout(scrollToBottom, 50);
+    }
+  }, [chunks, userScrolledUp]);
 
   const handleDisplayResult = useCallback(() => {
     if (promptValue.trim()) {
@@ -146,6 +171,10 @@ const Main = () => {
 
       getSourceMutation.mutate({ question: newQuestion, conversationId });
       setPromptValue("");
+      
+      // Reset scroll state and scroll to new message
+      setUserScrolledUp(false);
+      setTimeout(scrollToBottom, 100);
     }
   }, [promptValue, conversationId, getSourceMutation]);
 
@@ -184,9 +213,11 @@ const Main = () => {
       <div className="absolute top-3 left-3">
         <Sidebar />
       </div>
-      <div className="flex-grow overflow-y-auto">
+      <div className="flex-grow overflow-y-auto" ref={containerRef} onScroll={() => setUserScrolledUp(!isAtBottom())}>
         <div className="mx-auto w-full max-w-3xl">
-            {isHistoryLoading && messages.length === 0 && <Loader className="flex justify-center items-center h-screen"/>}
+          {isHistoryLoading && messages.length === 0 && (
+            <Loader className="flex h-screen items-center justify-center" />
+          )}
           {messages.map((msg, index) => (
             <div key={index} className="mt-4 mb-2 flex flex-col gap-4">
               {msg.role === "user" ? (
@@ -199,7 +230,21 @@ const Main = () => {
               )}
             </div>
           ))}
+          <div ref={messagesEndRef} />
         </div>
+        
+        {/* Scroll to bottom button */}
+        {userScrolledUp && (
+          <button
+            onClick={() => {
+              setUserScrolledUp(false);
+              scrollToBottom();
+            }}
+            className="fixed bottom-20 right-6 z-10 rounded-full bg-white border border-gray-200 p-2 shadow-lg hover:bg-gray-50"
+          >
+            <ChevronDown size={20} className="text-gray-600" />
+          </button>
+        )}
       </div>
       <div className="flex-shrink-0">
         <div className="mx-auto w-full max-w-3xl">
