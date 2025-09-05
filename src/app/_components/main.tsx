@@ -240,7 +240,7 @@ const Main = () => {
               setUserScrolledUp(false);
               scrollToBottom();
             }}
-            className="fixed bottom-20 right-6 z-10 rounded-full bg-white border border-gray-200 p-2 shadow-lg hover:bg-gray-50"
+            className="fixed bottom-20 right-100 z-10 rounded-full bg-white border border-gray-200 p-2 shadow-lg hover:bg-gray-50"
           >
             <ChevronDown size={20} className="text-gray-600" />
           </button>
