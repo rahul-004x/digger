@@ -10,6 +10,12 @@ import Answer from "./answer";
 import Sidebar from "./sidebar";
 import { UserButton } from "@clerk/nextjs";
 import { Loader } from "@/components/ai-elements/loader";
+import {
+  Sources,
+  SourcesContent,
+  SourcesTrigger,
+  Source as SourceComponent,
+} from "@/components/ai-elements/source";
 
 type Source = {
   title: string;
@@ -17,9 +23,9 @@ type Source = {
 };
 
 type chunk = {
-  data: string,
-  type: string
-}
+  data: string;
+  type: string;
+};
 
 type Message = {
   role: "user" | "assistant";
@@ -43,7 +49,8 @@ const Main = () => {
   const [isContextQueryEnabled, setIsContextQueryEnabled] = useState(false);
 
   // Auto-scroll functions
-  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = () =>
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   const isAtBottom = () => {
     const container = containerRef.current;
     if (!container) return true;
@@ -129,6 +136,7 @@ const Main = () => {
             {
               ...lastMsg,
               content: `An error occurred: ${errorChunk.data}`,
+              sources: sources.length > 0 ? sources : lastMsg.sources,
             },
           ];
         }
@@ -136,6 +144,7 @@ const Main = () => {
       });
       return;
     }
+
     const newAnswer = chunks
       .filter((c) => c.type === "answer")
       .map((c) => c.data)
@@ -144,7 +153,15 @@ const Main = () => {
     setMessages((prev) => {
       const lastMsg = prev[prev.length - 1];
       if (lastMsg?.role === "assistant") {
-        return [...prev.slice(0, -1), { ...lastMsg, content: newAnswer }];
+        return [
+          ...prev.slice(0, -1),
+          {
+            ...lastMsg,
+            content: newAnswer,
+            // Attach sources when streaming is complete
+            sources: sources.length > 0 ? sources : lastMsg.sources,
+          },
+        ];
       }
       return prev;
     });
@@ -153,7 +170,7 @@ const Main = () => {
     if (chunks.some((c) => c.type === "answer") && !userScrolledUp) {
       setTimeout(scrollToBottom, 50);
     }
-  }, [chunks, userScrolledUp]);
+  }, [chunks, userScrolledUp, sources]); // Added sources to dependency array
 
   const handleDisplayResult = useCallback(() => {
     if (promptValue.trim()) {
@@ -171,7 +188,7 @@ const Main = () => {
 
       getSourceMutation.mutate({ question: newQuestion, conversationId });
       setPromptValue("");
-      
+
       // Reset scroll state and scroll to new message
       setUserScrolledUp(false);
       setTimeout(scrollToBottom, 100);
@@ -213,26 +230,46 @@ const Main = () => {
       <div className="absolute top-3 left-3">
         <Sidebar />
       </div>
-      <div className="flex-grow overflow-y-auto" ref={containerRef} onScroll={() => setUserScrolledUp(!isAtBottom())}>
+      <div
+        className="flex-grow overflow-y-auto"
+        ref={containerRef}
+        onScroll={() => setUserScrolledUp(!isAtBottom())}
+      >
         <div className="mx-auto w-full max-w-3xl">
           {isHistoryLoading && messages.length === 0 && (
             <Loader className="flex h-screen items-center justify-center" />
           )}
           {messages.map((msg, index) => (
-            <div key={index} className="mt-4 mb-2 flex flex-col gap-4">
+            <div key={index} className="mt-2 mb-4 flex flex-col gap-4">
               {msg.role === "user" ? (
-                <div className="flex items-center gap-2 rounded-md border bg-black/5 p-3">
+                <div className="flex items-center gap-1 rounded-md border bg-black/5 p-2">
                   <MessageSquare size={20} />
                   <span className="font-semibold">{msg.content}</span>
                 </div>
               ) : (
-                <Answer answer={msg.content} />
+                <div className="flex flex-col">
+                  {msg.sources && msg.sources.length > 0 && (
+                    <Sources>
+                      <SourcesTrigger />{" "}
+                      <SourcesContent>
+                        {msg.sources.map((source, sourceIndex) => (
+                          <SourceComponent
+                            key={sourceIndex}
+                            title={source.title}
+                            href={source.url}
+                          />
+                        ))}
+                      </SourcesContent>
+                    </Sources>
+                  )}
+                  <Answer answer={msg.content} />
+                </div>
               )}
             </div>
           ))}
           <div ref={messagesEndRef} />
         </div>
-        
+
         {/* Scroll to bottom button */}
         {userScrolledUp && (
           <button
@@ -240,7 +277,7 @@ const Main = () => {
               setUserScrolledUp(false);
               scrollToBottom();
             }}
-            className="fixed bottom-20 right-100 z-10 rounded-full bg-white border border-gray-200 p-2 shadow-lg hover:bg-gray-50"
+            className="fixed right-100 bottom-20 z-10 rounded-full border border-gray-200 bg-white p-2 shadow-lg hover:bg-gray-50"
           >
             <ChevronDown size={20} className="text-gray-600" />
           </button>
