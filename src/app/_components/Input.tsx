@@ -58,11 +58,6 @@ function Input({
   const AnimatePlaceholder = () => (
     <AnimatePresence mode="wait">
       <motion.p
-        key="search"
-        initial={{ opacity: 0, y: 5 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -5 }}
-        transition={{ duration: 0.1 }}
         className="pointer-events-none absolute w-[150px] text-sm text-black/70"
       >
         Search the web...

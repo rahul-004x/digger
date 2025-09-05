@@ -45,7 +45,11 @@ const Sidebar = () => {
         <h3 className="text-sm font-medium text-gray-500 mb-2 pl-2">Recent Conversations</h3>
         <div className="space-y-1 max-h-[calc(100vh-180px)] overflow-y-auto">
           {isLoading ? (
-            <p className="text-sm text-gray-500 pl-2">Loading...</p>
+          <div className="flex w-full flex-col gap-1">
+              <div className="h-4 w-full rounded-l bg-gray-300 animate-pulse"></div>
+              <div className="h-4 w-full rounded-l bg-gray-300 animate-pulse"></div>
+              <div className="h-4 w-full rounded-l bg-gray-300 animate-pulse"></div>
+            </div>
           ) : conversations.length === 0 ? (
             <p className="text-sm text-gray-500 pl-2">No conversations yet</p>
           ) : (
