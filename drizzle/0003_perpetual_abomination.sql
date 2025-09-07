@@ -1,0 +1,1 @@
+ALTER TABLE "drizzle_conversation" RENAME COLUMN "clerkUserId" TO "clerk_user_id";

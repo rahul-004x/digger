@@ -2,9 +2,15 @@ import { z } from "zod";
 import { Readability } from "@mozilla/readability";
 import jsdom, { JSDOM } from "jsdom";
 
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  protectedProcedure,
+} from "@/server/api/trpc";
 import { tavily } from "@tavily/core";
 import openAI from "openai";
+import { conversation, messages } from "@/server/db/schema";
+import { sources } from "next/dist/compiled/webpack/webpack";
 
 const tavilyClient = tavily({
   apiKey: process.env.TAVILY_API_KEY,
@@ -47,9 +53,52 @@ async function fetchWithTimeout(url: string, timeout = 3000) {
 }
 
 export const sourceRouter = createTRPCRouter({
-  getSource: publicProcedure
-    .input(z.object({ question: z.string() }))
-    .mutation(async ({ input }) => {
+  getSource: protectedProcedure
+    .input(
+      z.object({
+        question: z.string(),
+        conversationId: z.string().uuid().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      let convId = input.conversationId;
+      let newConversationName: string | null = null;
+      if (!convId) {
+        const nameResponse = await openRouterClient.chat.completions.create({
+          model: "google/gemini-2.0-flash-exp:free",
+          messages: [
+            {
+              role: "system",
+              content:
+                "Generate a short, concise title (4-5) words for a conversation that start with this user question. Do not include quotation marks in the title.",
+            },
+            { role: "user", content: input.question },
+          ],
+        });
+        const generatedName =
+          nameResponse.choices[0]?.message?.content?.trim() ??
+          "New conversation";
+        newConversationName = generatedName;
+
+        const [newConversation] = await ctx.db
+          .insert(conversation)
+          .values({
+            name: generatedName,
+            clerkUserId: ctx.userId,
+          })
+          .returning();
+
+        if (!newConversation) {
+          throw new Error("Could not create a new conversation.");
+        }
+        convId = newConversation.id;
+      }
+      await ctx.db.insert(messages).values({
+        conversationId: convId,
+        role: "user",
+        content: input.question,
+      });
+
       const response = await tavilyClient.search(input.question, {
         searchDepth: "basic",
         maxResults: 6,
@@ -57,27 +106,44 @@ export const sourceRouter = createTRPCRouter({
         includeRawContent: false,
       });
       if (!response?.results) {
-        return [];
+        // Return an empty sources array but includes the conversationId
+        return {
+          sources: [],
+          conversationId: convId,
+          newConversationName,
+        };
       }
-      return response.results.slice(0, 6).map((result: any) => ({
-        name: result.title || "Untitled",
+      const sources = response.results.slice(0, 6).map((result: any) => ({
+        title: result.title || "Untitled",
         url: result.url,
       }));
+      return {
+        sources,
+        conversationId: convId,
+        newConversationName,
+      };
     }),
 
-  getContext: publicProcedure
-    .input(z.object({ urls: z.array(z.string()), question: z.string() }))
-    .query(async function*({ input }) {
+  getContext: protectedProcedure
+    .input(
+      z.object({
+        question: z.string(),
+        sources: z.array(z.object({ title: z.string(), url: z.string() })),
+        conversationId: z.string().uuid(),
+      }),
+    )
+    .query(async function* ({ ctx, input }) {
+      const urls = input.sources.map((s) => s.url);
       const context = await Promise.all(
-        input.urls.map(async (url) => {
+        urls.map(async (url) => {
           try {
             const html = await (await fetchWithTimeout(url)).text();
             const dom = new JSDOM(html, {
               virtualConsole: new jsdom.VirtualConsole(),
             });
             const text = cleanedText(
-              new Readability(dom.window.document).parse()?.textContent ||
-              "No content",
+              new Readability(dom.window.document).parse()?.textContent ??
+                "No content",
             );
             return { context: text };
           } catch {
@@ -94,7 +160,7 @@ export const sourceRouter = createTRPCRouter({
   Do not repeat the user's question in your response. Be direct and answer the question.
   if the user asks for list a of itmes, provide a list with their functions and benefits
 
-  Format your response in Markdown. Use headings, lists, and code blocks for code snippets.
+  Format your response in Markdown, Use clear headings with different sizes and font to organize sections, Include code snippets in fenced code blocks, Use bold or italics to highlight key points, Add tables for structured data when relevant, Keep paragraphs concise and split long explanations into smaller sections.
 
 Answer Context:
 ${combined}
@@ -116,13 +182,26 @@ ${combined}
           stream: true,
         });
 
+        let fullResonse = "";
         for await (const chunk of stream) {
           const token = chunk.choices[0]?.delta?.content;
-          if (token) yield { type: "answer", data: token } as const;
+          if (token) {
+            fullResonse += token;
+            yield { type: "answer", data: token } as const;
+          }
         }
-      } catch (error: any) {
+        if (fullResonse) {
+          await ctx.db.insert(messages).values({
+            conversationId: input.conversationId,
+            role: "assistant",
+            content: fullResonse,
+            sources: input.sources,
+          });
+        }
+      } catch (error: unknown) {
         console.error("Error calling OpenRouter:", error);
-        const errorMessage = error.message || "An unknown error occurred.";
+        const errorMessage =
+          error instanceof Error ? error.message : "An unknown error occurred.";
         yield {
           type: "error",
           data: `Error from AI service: ${errorMessage}`,

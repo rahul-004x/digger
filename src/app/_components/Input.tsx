@@ -58,11 +58,6 @@ function Input({
   const AnimatePlaceholder = () => (
     <AnimatePresence mode="wait">
       <motion.p
-        key="search"
-        initial={{ opacity: 0, y: 5 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -5 }}
-        transition={{ duration: 0.1 }}
         className="pointer-events-none absolute w-[150px] text-sm text-black/70"
       >
         Search the web...
@@ -72,7 +67,7 @@ function Input({
 
   return (
     <div className="w-full">
-      <div className="mx-auto w-full max-w-2xl rounded-[22px] border border-black/5 p-1">
+      <div className="mx-auto w-full max-w-3xl rounded-[22px] border border-black/5 p-1">
         <div className="relative rounded-2xl border border-black/5 bg-neutral-800/5">
           <div
             className="overflow-y-auto"
