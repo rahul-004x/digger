@@ -1,0 +1,1 @@
+ALTER TABLE "drizzle_conversation" ALTER COLUMN "clerkUserId" DROP NOT NULL;

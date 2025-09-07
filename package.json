@@ -6,6 +6,10 @@
   "scripts": {
     "build": "next build",
     "check": "next lint && tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
     "dev": "next dev --turbo",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "format:write": "prettier --write \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
@@ -17,6 +21,7 @@
   },
   "dependencies": {
     "@ai-sdk/react": "^2.0.22",
+    "@clerk/nextjs": "^6.31.6",
     "@mozilla/readability": "^0.6.0",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-collapsible": "^1.1.12",
@@ -35,17 +40,22 @@
     "ai": "^5.0.22",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "drizzle-kit": "^0.31.4",
+    "drizzle-orm": "^0.44.5",
     "embla-carousel-react": "^8.6.0",
     "jsdom": "^26.1.0",
     "lucide-react": "^0.535.0",
     "motion": "^12.23.12",
     "next": "^15.2.3",
     "openai": "^5.11.0",
+    "postgres": "^3.4.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^15.6.3",
+    "server": "link:@clerk/nextjs/server",
     "server-only": "^0.0.1",
+    "shiki": "^3.12.2",
     "streamdown": "^1.0.12",
     "superjson": "^2.2.1",
     "tailwind-merge": "^3.3.1",
@@ -73,5 +83,5 @@
   "ct3aMetadata": {
     "initVersion": "7.39.3"
   },
-  "packageManager": "pnpm@10.13.1"
+  "packageManager": "pnpm@10.15.1"
 }
