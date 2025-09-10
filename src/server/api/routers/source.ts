@@ -2,10 +2,7 @@ import { z } from "zod";
 import { Readability } from "@mozilla/readability";
 import jsdom, { JSDOM } from "jsdom";
 
-import {
-  createTRPCRouter,
-  protectedProcedure,
-} from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { tavily } from "@tavily/core";
 import openAI from "openai";
 import { conversation, messages } from "@/server/db/schema";
@@ -130,7 +127,7 @@ export const sourceRouter = createTRPCRouter({
         conversationId: z.string().uuid(),
       }),
     )
-    .query(async function* ({ ctx, input }) {
+    .query(async function*({ ctx, input }) {
       const urls = input.sources.map((s) => s.url);
       const context = await Promise.all(
         urls.map(async (url) => {
@@ -141,7 +138,7 @@ export const sourceRouter = createTRPCRouter({
             });
             const text = cleanedText(
               new Readability(dom.window.document).parse()?.textContent ??
-                "No content",
+              "No content",
             );
             return { context: text };
           } catch {
@@ -157,6 +154,7 @@ export const sourceRouter = createTRPCRouter({
         )
         .join("\n\n");
       const mainAnswerPrompt = `  Given a user question and some context, please write a clean, concise and accurate answer to the question based on the context. You will be given a set of related contexts to the question, each starting with a reference number like [[citation:x]].
+ MUST include **inline citations** in the format "[INLINE_CITATION](https://...)" after every key claim or data point
 
   Your answer must be correct, accurate and written by an expert using an unbiased and professional tone. Please limit to 1024 tokens. Do not give any information that is not related to the question, and do not repeat. Say "information is missing on" followed by the related topic, if the given context do not provide sufficient information.
 

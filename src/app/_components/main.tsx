@@ -16,6 +16,8 @@ import {
   SourcesTrigger,
   Source as SourceComponent,
 } from "@/components/ai-elements/source";
+import { ur } from "zod/v4/locales";
+import { url } from "inspector/promises";
 
 type Source = {
   title: string;
@@ -262,7 +264,7 @@ const Main = () => {
                       </SourcesContent>
                     </Sources>
                   )}
-                  <Answer answer={msg.content} />
+                  <Answer answer={msg.content} sources={msg.sources} />
                 </div>
               )}
             </div>
