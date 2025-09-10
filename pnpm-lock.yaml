@@ -107,6 +107,9 @@ importers:
       react-syntax-highlighter:
         specifier: ^15.6.3
         version: 15.6.3(react@19.1.0)
+      remark-gfm:
+        specifier: ^4.0.1
+        version: 4.0.1
       server:
         specifier: link:@clerk/nextjs/server
         version: link:@clerk/nextjs/server

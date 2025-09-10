@@ -4,13 +4,11 @@ import jsdom, { JSDOM } from "jsdom";
 
 import {
   createTRPCRouter,
-  publicProcedure,
   protectedProcedure,
 } from "@/server/api/trpc";
 import { tavily } from "@tavily/core";
 import openAI from "openai";
 import { conversation, messages } from "@/server/db/schema";
-import { sources } from "next/dist/compiled/webpack/webpack";
 
 const tavilyClient = tavily({
   apiKey: process.env.TAVILY_API_KEY,
@@ -152,10 +150,17 @@ export const sourceRouter = createTRPCRouter({
         }),
       );
 
-      const combined = context.map((c) => c.context).join("\n\n");
-      const mainAnswerPrompt = `  Given a user question and some context, please write a clean, concise and accurate answer to the question based on the context. You will be given a set of related contexts to the question, each starting with a reference number like [[citation:x]], where x is a link. 
+      const combined = input.sources
+        .map(
+          (source, index) =>
+            `[[citation:${index + 1}]]\n${context[index]?.context}`,
+        )
+        .join("\n\n");
+      const mainAnswerPrompt = `  Given a user question and some context, please write a clean, concise and accurate answer to the question based on the context. You will be given a set of related contexts to the question, each starting with a reference number like [[citation:x]].
 
   Your answer must be correct, accurate and written by an expert using an unbiased and professional tone. Please limit to 1024 tokens. Do not give any information that is not related to the question, and do not repeat. Say "information is missing on" followed by the related topic, if the given context do not provide sufficient information.
+
+  When you use information from a context, you must add a citation marker to the end of the sentence, like this: "This is a sentence from the context [[citation:1]]". You can cite multiple sources like this: "This is a sentence from multiple contexts [[citation:1]][[citation:2]]".
 
   Do not repeat the user's question in your response. Be direct and answer the question.
   if the user asks for list a of itmes, provide a list with their functions and benefits
@@ -166,7 +171,7 @@ Answer Context:
 ${combined}
 
   
-  Remember, don't blindly repeat the contexts verbatim and don't tell the user how you used the citations – just respond with the answer. It is very important for my career that you follow these instructions. Here is the user question:
+  Remember, don't blindly repeat the contexts verbatim and don't tell the user how you used the citations – just respond with the answer with citation markers. It is very important for my career that you follow these instructions. Here is the user question:
     `;
 
       try {
