@@ -5,11 +5,19 @@ import type { Components } from "react-markdown";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
 import { FaviconImage } from "./FaviconImage";
+import { CitationTooltip } from "./citations/citationTooltip";
 
 interface CustomMarkdownProps {
   children: string;
   sources?: Array<{ url: string; title: string }>;
 }
+
+// Helper function to safely convert children to text
+const childrenToText = (children: React.ReactNode): string => {
+  return React.Children.toArray(children)
+    .map(child => typeof child === 'string' ? child : '')
+    .join('');
+};
 
 const createMarkdownComponents = (
   sources?: Array<{ url: string; title: string }>,
@@ -21,8 +29,11 @@ const createMarkdownComponents = (
   ),
   hr: ({ }) => <hr className="pb-4" />,
   pre: ({ children }) => <>{children}</>,
-  img: ({ children, ...props }) => {
-    return <img className="max-w-full rounded-lg" {...props} />;
+  img: ({ src, alt, ...props }) => {
+    if (!src) return null;
+    // For external images, we'll use regular img with proper alt text
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={src} alt={alt ?? ""} className="max-w-full rounded-lg" {...props} />;
   },
   ol: ({ children, ...props }) => {
     return (
@@ -53,18 +64,25 @@ const createMarkdownComponents = (
     );
   },
   a: ({ children, ...props }) => {
-    if (children?.toString() === "INLINE_CITATION" && sources) {
+    const childrenString = childrenToText(children);
+    
+    if (childrenString === "INLINE_CITATION" && sources) {
       const normalizedHref = props.href?.replace(/\/+$/, "");
       const sourceIndex = sources.findIndex(
         (source) => source.url.replace(/\/+$/, "") === normalizedHref,
       );
+      if (sourceIndex !== -1 && sources[sourceIndex]) {
+        return (
+          <CitationTooltip index={sourceIndex} sources={sources[sourceIndex]} />
+        );
+      }
       return (
         <a
           href={props.href}
           className="text-blue-500 hover:underline"
           {...props}
         >
-          <FaviconImage url={props.href || ""} />
+          <FaviconImage url={props.href ?? ""} />
         </a>
       );
     }
@@ -82,10 +100,7 @@ const createMarkdownComponents = (
     );
   },
   h1: ({ children, ...props }) => {
-    const text =
-      typeof children === "string"
-        ? children
-        : React.Children.toArray(children).join("");
+    const text = childrenToText(children);
     const anchor = text
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
@@ -101,10 +116,7 @@ const createMarkdownComponents = (
     );
   },
   h2: ({ children, ...props }) => {
-    const text =
-      typeof children === "string"
-        ? children
-        : React.Children.toArray(children).join("");
+    const text = childrenToText(children);
     const anchor = text
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
@@ -120,10 +132,7 @@ const createMarkdownComponents = (
     );
   },
   h3: ({ children, ...props }) => {
-    const text =
-      typeof children === "string"
-        ? children
-        : React.Children.toArray(children).join("");
+    const text = childrenToText(children);
     const anchor = text
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
