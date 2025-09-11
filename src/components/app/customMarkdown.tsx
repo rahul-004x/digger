@@ -12,21 +12,21 @@ interface CustomMarkdownProps {
 }
 
 const createMarkdownComponents = (
-  sources?: Array<{ url: string; title: string }>
+  sources?: Array<{ url: string; title: string }>,
 ): Partial<Components> => ({
   p: ({ children }) => (
-    <p className="text-base font-light text-left text-[#0f172b] leading-6 pb-4">
+    <p className="pb-4 text-left text-base leading-6 font-light text-[#0f172b]">
       {children}
     </p>
   ),
-  hr: ({}) => <hr className="pb-4" />,
+  hr: ({ }) => <hr className="pb-4" />,
   pre: ({ children }) => <>{children}</>,
   img: ({ children, ...props }) => {
     return <img className="max-w-full rounded-lg" {...props} />;
   },
   ol: ({ children, ...props }) => {
     return (
-      <ol className="list-decimal list-outside ml-4" {...props}>
+      <ol className="ml-4 list-outside list-decimal" {...props}>
         {children}
       </ol>
     );
@@ -40,7 +40,7 @@ const createMarkdownComponents = (
   },
   ul: ({ children, ...props }) => {
     return (
-      <ul className="list-decimal list-outside ml-4" {...props}>
+      <ul className="ml-4 list-outside list-decimal" {...props}>
         {children}
       </ul>
     );
@@ -56,7 +56,7 @@ const createMarkdownComponents = (
     if (children?.toString() === "INLINE_CITATION" && sources) {
       const normalizedHref = props.href?.replace(/\/+$/, "");
       const sourceIndex = sources.findIndex(
-        (source) => source.url.replace(/\/+$/, "") === normalizedHref
+        (source) => source.url.replace(/\/+$/, "") === normalizedHref,
       );
       return (
         <a
@@ -93,7 +93,7 @@ const createMarkdownComponents = (
     return (
       <h1
         id={anchor}
-        className="text-[28px] md:text-[40px] font-medium text-left text-[#0f172b] mb-2 leading-[48px]"
+        className="mb-2 text-left text-[28px] leading-[48px] font-medium text-[#0f172b] md:text-[40px]"
         {...props}
       >
         {children}
@@ -112,7 +112,7 @@ const createMarkdownComponents = (
     return (
       <h2
         id={anchor}
-        className="text-2xl md:text-[28px] text-left font-medium text-[#0f172b] mb-2 "
+        className="mb-2 text-left text-2xl font-medium text-[#0f172b] md:text-[28px]"
         {...props}
       >
         {children}
@@ -131,7 +131,7 @@ const createMarkdownComponents = (
     return (
       <h3
         id={anchor}
-        className="text-[18px] md:text-xl text-left text-[#0f172b] mb-2"
+        className="mb-2 text-left text-[18px] text-[#0f172b] md:text-xl"
         {...props}
       >
         {children}
@@ -140,21 +140,21 @@ const createMarkdownComponents = (
   },
   h4: ({ children, ...props }) => {
     return (
-      <h4 className="text-lg text-left text-[#0f172b] mb-2" {...props}>
+      <h4 className="mb-2 text-left text-lg text-[#0f172b]" {...props}>
         {children}
       </h4>
     );
   },
   h5: ({ children, ...props }) => {
     return (
-      <h5 className="text-base text-left text-[#0f172b] mb-2" {...props}>
+      <h5 className="mb-2 text-left text-base text-[#0f172b]" {...props}>
         {children}
       </h5>
     );
   },
   h6: ({ children, ...props }) => {
     return (
-      <h6 className="text-sm text-left text-[#0f172b] mb-2" {...props}>
+      <h6 className="mb-2 text-left text-sm text-[#0f172b]" {...props}>
         {children}
       </h6>
     );
@@ -163,7 +163,7 @@ const createMarkdownComponents = (
     return (
       <div className="w-full overflow-auto">
         <table
-          className="w-full text-sm text-left border-collapse my-4 rounded-lg overflow-hidden"
+          className="my-4 w-full border-collapse overflow-hidden rounded-lg text-left text-sm"
           {...props}
         >
           {children}
@@ -181,7 +181,7 @@ const createMarkdownComponents = (
   th: ({ children, ...props }) => {
     return (
       <th
-        className="px-4 py-2 font-semibold text-foreground border-b border-border"
+        className="text-foreground border-border border-b px-4 py-2 font-semibold"
         {...props}
       >
         {children}
@@ -190,7 +190,7 @@ const createMarkdownComponents = (
   },
   td: ({ children, ...props }) => {
     return (
-      <td className="px-4 py-2 border-b border-border" {...props}>
+      <td className="border-border border-b px-4 py-2" {...props}>
         {children}
       </td>
     );

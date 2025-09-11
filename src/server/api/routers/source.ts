@@ -153,24 +153,29 @@ export const sourceRouter = createTRPCRouter({
             `[[citation:${index + 1}]]\n${context[index]?.context}`,
         )
         .join("\n\n");
-      const mainAnswerPrompt = `  Given a user question and some context, please write a clean, concise and accurate answer to the question based on the context. You will be given a set of related contexts to the question, each starting with a reference number like [[citation:x]].
- MUST include **inline citations** in the format "[INLINE_CITATION](https://...)" after every key claim or data point
+      const mainAnswerPrompt = `Given a user question and some context, write a clean, concise, and accurate answer to the question based only on the context.
 
-  Your answer must be correct, accurate and written by an expert using an unbiased and professional tone. Please limit to 1024 tokens. Do not give any information that is not related to the question, and do not repeat. Say "information is missing on" followed by the related topic, if the given context do not provide sufficient information.
+       Every key claim, fact, or data point must have an inline citation in this exact format: [INLINE_CITATION](https://.....).
 
-  When you use information from a context, you must add a citation marker to the end of the sentence, like this: "This is a sentence from the context [[citation:1]]". You can cite multiple sources like this: "This is a sentence from multiple contexts [[citation:1]][[citation:2]]".
+      If a point is supported by multiple sources, you must repeat the full citation format for each source, like:
+      [INLINE_CITATION](https://.....)[INLINE_CITATION](https://.....)[INLINE_CITATION](https://.....), Do not repeat the citation of the same domain for the same point 
+      Do not place citations at the end of paragraphs; they must appear immediately after the claim they support.
+      Do not include a separate "References" or "Sources" section — only inline citations.
 
-  Do not repeat the user's question in your response. Be direct and answer the question.
-  if the user asks for list a of itmes, provide a list with their functions and benefits
+      If no reliable source is available in the context, say so explicitly instead of making unsupported claims. Your answer must be correct, accurate and written by an expert using an unbiased an   d professional tone. Please limit to 1024 tokens. Do not give any information that is not related to the question, and do not repeat. Say "information is missing on" followed by the related   topic, if the given context do not provide sufficient information.
 
-  Format your response in Markdown, Use clear headings with different sizes and font to organize sections, Include code snippets in fenced code blocks, Use bold or italics to highlight key points, Add tables for structured data when relevant, Keep paragraphs concise and split long explanations into smaller sections.
+      When you use information from a context, you must add a citation marker to the end of the sentence, like this: "This is a sentence from the context [[citation:1]]". You can cite multiple sources like this: "This is a sentence from multiple contexts [[citation:1]][[citation:2]]".
 
-Answer Context:
-${combined}
+      Do not repeat the user's question in your response. Be direct and answer the question.
+      if the user asks for list a of itmes, provide a list with their functions and benefits
 
-  
-  Remember, don't blindly repeat the contexts verbatim and don't tell the user how you used the citations – just respond with the answer with citation markers. It is very important for my career that you follow these instructions. Here is the user question:
-    `;
+      Format your response in Markdown, Use clear headings with different sizes and font to organize sections, Include code snippets in fenced code blocks, Use bold or italics to highlight key points, Add tables for structured data when relevant, Keep paragraphs concise and split long explanations into smaller sections.
+
+      Answer Contextj:
+      ${combined}
+
+     Remember, don't blindly repeat the contexts verbatim and don't tell the user how you used the citations – just respond with the answer with citation markers. It is very important for my career that you follow these instructions. Here is the user question:
+  `;
 
       try {
         const stream = await openRouterClient.chat.completions.create({

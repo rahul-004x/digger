@@ -32,7 +32,7 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="w-64 p-4 rounded-md bg-gray-50 h-full">
+    <div className="w-64 p-4 rounded-md bg-[#F5F6FA] h-full ">
       <h2 className="text-xl font-bold mb-4 ml-19">Digger</h2>
       <button 
         className="px-4 py-2 w-full bg-black text-white rounded-md hover:bg-gray-800 mb-4"
