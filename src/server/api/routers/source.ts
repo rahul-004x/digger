@@ -60,7 +60,7 @@ export const sourceRouter = createTRPCRouter({
       let newConversationName: string | null = null;
       if (!convId) {
         const nameResponse = await openRouterClient.chat.completions.create({
-          model: "google/gemini-2.0-flash-exp:free",
+          model: "deepseek/deepseek-chat-v3-0324:free",
           messages: [
             {
               role: "system",

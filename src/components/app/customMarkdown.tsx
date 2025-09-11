@@ -82,7 +82,7 @@ const createMarkdownComponents = (
           className="text-blue-500 hover:underline"
           {...props}
         >
-          <FaviconImage url={props.href ?? ""} />
+          {/* <FaviconImage url={props.href ?? ""} /> */}
         </a>
       );
     }
