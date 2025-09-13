@@ -1,13 +1,16 @@
 import React from "react";
 import remarkGfm from "remark-gfm";
-
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import type { Components } from "react-markdown";
 import ReactMarkdown from "react-markdown";
-import Link from "next/link";
-import { FaviconImage } from "./FaviconImage";
-import { CitationTooltip } from "./citations/citationTooltip";
 
-interface CustomMarkdownProps {
+import { CodeBlock } from "./CodeBlock";
+import { CitationTooltip } from "./citations/citationTooltip";
+import "katex/dist/katex.min.css";
+import { FaviconImage } from "./FaviconImage";
+
+interface EnhancedMarkdownProps {
   children: string;
   sources?: Array<{ url: string; title: string }>;
 }
@@ -23,46 +26,78 @@ const createMarkdownComponents = (
   sources?: Array<{ url: string; title: string }>,
 ): Partial<Components> => ({
   p: ({ children }) => (
-    <p className="pb-4 text-left text-base leading-6 font-light text-[#0f172b]">
+    <p className="pb-4 text-left text-base leading-6 font-light text-foreground">
       {children}
     </p>
   ),
-  hr: ({ }) => <hr className="pb-4" />,
-  pre: ({ children }) => <>{children}</>,
+  hr: ({ }) => <hr className="pb-4 border-border" />,
+  pre: ({ children }) => {
+    // Handle code blocks
+    const child = React.Children.toArray(children)[0] as React.ReactElement;
+    if (child?.props && 'className' in child.props && typeof child.props.className === 'string') {
+      const language = child.props.className.replace('language-', '');
+      const code = 'children' in child.props ? child.props.children as string : '';
+      return <CodeBlock language={language}>{code}</CodeBlock>;
+    }
+    return (
+      <div className="bg-muted p-4 rounded-lg my-4 overflow-x-auto">
+        <pre className="text-sm font-mono">{children}</pre>
+      </div>
+    );
+  },
+  code: ({ children, className, ...props }) => {
+    const language = className?.replace('language-', '');
+    const isInline = !className;
+    
+    if (isInline) {
+      return <CodeBlock inline>{children as string}</CodeBlock>;
+    }
+    
+    return <code {...props}>{children}</code>;
+  },
   img: ({ src, alt, ...props }) => {
     if (!src) return null;
-    // For external images, we'll use regular img with proper alt text
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt ?? ""} className="max-w-full rounded-lg" {...props} />;
-  },
-  ol: ({ children, ...props }) => {
     return (
-      <ol className="ml-4 list-outside list-decimal" {...props}>
-        {children}
-      </ol>
+      <img 
+        src={src} 
+        alt={alt ?? ""} 
+        className="max-w-full rounded-lg shadow-md my-4" 
+        {...props} 
+      />
     );
   },
-  li: ({ children, ...props }) => {
-    return (
-      <li className="py-1" {...props}>
+  ol: ({ children, ...props }) => (
+    <ol className="ml-4 list-outside list-decimal space-y-2 mb-4" {...props}>
+      {children}
+    </ol>
+  ),
+  ul: ({ children, ...props }) => (
+    <ul className="ml-4 list-outside list-disc space-y-2 mb-4" {...props}>
+      {children}
+    </ul>
+  ),
+  li: ({ children, ...props }) => (
+    <li className="text-foreground" {...props}>
+      {children}
+    </li>
+  ),
+  strong: ({ children, ...props }) => (
+    <span className="font-semibold text-foreground" {...props}>
+      {children}
+    </span>
+  ),
+  em: ({ children, ...props }) => (
+    <em className="italic text-foreground" {...props}>
+      {children}
+    </em>
+  ),
+  blockquote: ({ children, ...props }) => (
+    <blockquote className="border-l-4 border-primary pl-4 py-2 my-4 bg-muted/50 rounded-r-lg" {...props}>
+      <div className="text-muted-foreground italic">
         {children}
-      </li>
-    );
-  },
-  ul: ({ children, ...props }) => {
-    return (
-      <ul className="ml-4 list-outside list-decimal" {...props}>
-        {children}
-      </ul>
-    );
-  },
-  strong: ({ children, ...props }) => {
-    return (
-      <span className="font-semibold" {...props}>
-        {children}
-      </span>
-    );
-  },
+      </div>
+    </blockquote>
+  ),
   a: ({ children, ...props }) => {
     const childrenString = childrenToText(children);
     
@@ -79,24 +114,23 @@ const createMarkdownComponents = (
       return (
         <a
           href={props.href}
-          className="text-blue-500 hover:underline"
+          className="text-primary hover:text-primary/80 underline transition-colors"
           {...props}
         >
-          {/* <FaviconImage url={props.href ?? ""} /> */}
+          <FaviconImage url={props.href ?? ""} />
         </a>
       );
     }
 
     return (
-      // @ts-expect-error - Link component expects href prop from markdown-parsed anchor tags
-      <Link
-        className="text-blue-500 hover:underline"
+      <a
+        className="text-primary hover:text-primary/80 underline transition-colors"
         target="_blank"
         rel="noreferrer"
         {...props}
       >
         {children}
-      </Link>
+      </a>
     );
   },
   h1: ({ children, ...props }) => {
@@ -108,7 +142,7 @@ const createMarkdownComponents = (
     return (
       <h1
         id={anchor}
-        className="mb-2 text-left text-[28px] leading-[48px] font-medium text-[#0f172b] md:text-[40px]"
+        className="mb-6 mt-8 text-left text-3xl md:text-4xl font-bold text-foreground scroll-mt-20"
         {...props}
       >
         {children}
@@ -124,7 +158,7 @@ const createMarkdownComponents = (
     return (
       <h2
         id={anchor}
-        className="mb-2 text-left text-2xl font-medium text-[#0f172b] md:text-[28px]"
+        className="mb-4 mt-6 text-left text-2xl md:text-3xl font-semibold text-foreground scroll-mt-20"
         {...props}
       >
         {children}
@@ -140,89 +174,72 @@ const createMarkdownComponents = (
     return (
       <h3
         id={anchor}
-        className="mb-2 text-left text-[18px] text-[#0f172b] md:text-xl"
+        className="mb-3 mt-5 text-left text-xl md:text-2xl font-medium text-foreground scroll-mt-20"
         {...props}
       >
         {children}
       </h3>
     );
   },
-  h4: ({ children, ...props }) => {
-    return (
-      <h4 className="mb-2 text-left text-lg text-[#0f172b]" {...props}>
+  h4: ({ children, ...props }) => (
+    <h4 className="mb-2 mt-4 text-left text-lg font-medium text-foreground" {...props}>
+      {children}
+    </h4>
+  ),
+  h5: ({ children, ...props }) => (
+    <h5 className="mb-2 mt-3 text-left text-base font-medium text-foreground" {...props}>
+      {children}
+    </h5>
+  ),
+  h6: ({ children, ...props }) => (
+    <h6 className="mb-2 mt-3 text-left text-sm font-medium text-foreground" {...props}>
+      {children}
+    </h6>
+  ),
+  table: ({ children, ...props }) => (
+    <div className="w-full overflow-auto my-6 rounded-lg border border-border">
+      <table className="w-full border-collapse text-left text-sm" {...props}>
         {children}
-      </h4>
-    );
-  },
-  h5: ({ children, ...props }) => {
-    return (
-      <h5 className="mb-2 text-left text-base text-[#0f172b]" {...props}>
-        {children}
-      </h5>
-    );
-  },
-  h6: ({ children, ...props }) => {
-    return (
-      <h6 className="mb-2 text-left text-sm text-[#0f172b]" {...props}>
-        {children}
-      </h6>
-    );
-  },
-  table: ({ children, ...props }) => {
-    return (
-      <div className="w-full overflow-auto">
-        <table
-          className="my-4 w-full border-collapse overflow-hidden rounded-lg text-left text-sm"
-          {...props}
-        >
-          {children}
-        </table>
-      </div>
-    );
-  },
-  thead: ({ children, ...props }) => {
-    return (
-      <thead className="bg-muted" {...props}>
-        {children}
-      </thead>
-    );
-  },
-  th: ({ children, ...props }) => {
-    return (
-      <th
-        className="text-foreground border-border border-b px-4 py-2 font-semibold"
-        {...props}
-      >
-        {children}
-      </th>
-    );
-  },
-  td: ({ children, ...props }) => {
-    return (
-      <td className="border-border border-b px-4 py-2" {...props}>
-        {children}
-      </td>
-    );
-  },
-  tr: ({ children, ...props }) => {
-    return (
-      <tr className="hover:bg-accent transition-colors" {...props}>
-        {children}
-      </tr>
-    );
-  },
+      </table>
+    </div>
+  ),
+  thead: ({ children, ...props }) => (
+    <thead className="bg-muted" {...props}>
+      {children}
+    </thead>
+  ),
+  th: ({ children, ...props }) => (
+    <th className="border-b border-border px-4 py-3 font-semibold text-foreground" {...props}>
+      {children}
+    </th>
+  ),
+  td: ({ children, ...props }) => (
+    <td className="border-b border-border px-4 py-3 text-foreground" {...props}>
+      {children}
+    </td>
+  ),
+  tr: ({ children, ...props }) => (
+    <tr className="hover:bg-accent/50 transition-colors" {...props}>
+      {children}
+    </tr>
+  ),
 });
 
-export const CustomMarkdown: React.FC<CustomMarkdownProps> = ({
+export const CustomMarkdown: React.FC<EnhancedMarkdownProps> = ({
   children,
   sources,
 }) => {
   const components = createMarkdownComponents(sources);
 
-  // TODO: Consider sanitizing HTML output for security if user input is rendered
   return (
-    <ReactMarkdown components={components} remarkPlugins={[remarkGfm]}>
-      {children}
-    </ReactMarkdown>
+    <div className="prose prose-slate max-w-none">
+      <ReactMarkdown 
+        components={components} 
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeKatex]}
+      >
+        {children}
+      </ReactMarkdown>
+    </div>
   );
 };

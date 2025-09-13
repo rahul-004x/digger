@@ -1,8 +1,9 @@
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { CitationNumber } from "./CitationNumber";
 import WebResultCard from "../WebResultCard";
 
@@ -12,13 +13,13 @@ interface CitationTooltipProps {
 }
 export const CitationTooltip = ({ index, sources }: CitationTooltipProps) => {
   return (
-    <Popover>
-      <PopoverTrigger>
-        <CitationNumber num={index + 1} />
-      </PopoverTrigger>
-      <PopoverContent>
-        <WebResultCard result={sources} id={sources.url} />
-      </PopoverContent>
-    </Popover>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <CitationNumber num={index + 1} />
+        </TooltipTrigger>
+        <TooltipContent>
+          <WebResultCard result={sources} id={sources.url} />
+        </TooltipContent>
+      </Tooltip>
   );
 };

@@ -16,8 +16,6 @@ import {
   SourcesTrigger,
   Source as SourceComponent,
 } from "@/components/ai-elements/source";
-import { ur } from "zod/v4/locales";
-import { url } from "inspector/promises";
 
 type Source = {
   title: string;
@@ -279,7 +277,7 @@ const Main = () => {
               setUserScrolledUp(false);
               scrollToBottom();
             }}
-            className="fixed right-210 bottom-30 z-10 rounded-full border border-gray-200 bg-white p-2 shadow-lg hover:bg-gray-50"
+            className="fixed cursor-pointer right-210 bottom-30 z-10 rounded-full border border-gray-200 bg-white p-2 shadow-lg hover:bg-gray-50"
           >
             <ChevronDown size={20} className="text-gray-600" />
           </button>

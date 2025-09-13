@@ -77,7 +77,6 @@ function Input({
               <Textarea
                 id="ai-input"
                 value={promptValue}
-                placeholder=""
                 ref={textareaRef}
                 className="w-full resize-none rounded-2xl rounded-b-none border-none bg-black/5 px-4 py-3 leading-[1.2] focus-visible:ring-0"
                 onChange={(e) => {
