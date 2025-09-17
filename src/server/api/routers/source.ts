@@ -41,7 +41,7 @@ async function fetchWithTimeout(url: string, timeout = 3000) {
       clearTimeout(fetchTimeout);
       return response;
     })
-    .catch((error) => {
+    .catch((error: Error) => {
       if (error.name === "AbortError") throw new Error("fetch request timeout");
       throw error;
     });
@@ -60,7 +60,7 @@ export const sourceRouter = createTRPCRouter({
       let newConversationName: string | null = null;
       if (!convId) {
         const nameResponse = await openRouterClient.chat.completions.create({
-          model: "deepseek/deepseek-chat-v3-0324:free",
+          model: "openai/gpt-oss-20b:free",
           messages: [
             {
               role: "system",
@@ -108,8 +108,8 @@ export const sourceRouter = createTRPCRouter({
           newConversationName,
         };
       }
-      const sources = response.results.slice(0, 6).map((result: any) => ({
-        title: result.title || "Untitled",
+      const sources = response.results.slice(0, 6).map((result) => ({
+        title: result.title ?? "Untitled",
         url: result.url,
       }));
       return {
@@ -214,7 +214,7 @@ Please ensure all code is functional, all math formulas use correct LaTeX syntax
 
       try {
         const stream = await openRouterClient.chat.completions.create({
-          model: "google/gemini-2.0-flash-exp:free",
+          model: "openai/gpt-oss-20b:free",
           messages: [
             { role: "system", content: mainAnswerPrompt },
             {

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { getDomainFromUrl } from "@/lib/utils";
 
 export const FaviconImage: React.FC<{

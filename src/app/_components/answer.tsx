@@ -1,4 +1,3 @@
-import { Response } from "@/components/ai-elements/response";
 import { CustomMarkdown } from "@/components/app/customMarkdown";
 
 type AnswerProps = {

@@ -95,11 +95,11 @@ const Main = () => {
     onSuccess: async (data) => {
       if (data.conversationId && !conversationId) {
         setConversationId(data.conversationId);
-        window.history.pushState(
-          null,
-          "",
-          `?conversationId=${data.conversationId}`,
-        );
+        // window.history.pushState(
+        //   null,
+        //   "",
+        //   `?conversationId=${data.conversationId}`,
+        // );
         await utils.db.getConversations.invalidate();
       }
       setSources(data.sources);
@@ -277,7 +277,7 @@ const Main = () => {
               setUserScrolledUp(false);
               scrollToBottom();
             }}
-            className="fixed cursor-pointer right-210 bottom-30 z-10 rounded-full border border-gray-200 bg-white p-2 shadow-lg hover:bg-gray-50"
+            className="fixed right-210 bottom-30 z-10 cursor-pointer rounded-full border border-gray-200 bg-white p-2 shadow-lg hover:bg-gray-50"
           >
             <ChevronDown size={20} className="text-gray-600" />
           </button>
@@ -290,7 +290,7 @@ const Main = () => {
             setPromptValue={setPromptValue}
             handleDisplayResult={handleDisplayResult}
             disabled={isLoading}
-            top="top-5"
+            top="top-3"
           />
         </div>
       </div>

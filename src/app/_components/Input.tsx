@@ -13,7 +13,7 @@ export type TProps = {
   handleDisplayResult: () => void;
   reset?: () => void;
   style?: string;
-  top: string
+  top: string;
 };
 
 function Input({
@@ -22,7 +22,7 @@ function Input({
   disabled,
   handleDisplayResult,
   style,
-  top
+  top,
 }: TProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -57,9 +57,7 @@ function Input({
 
   const AnimatePlaceholder = () => (
     <AnimatePresence mode="wait">
-      <motion.p
-        className="pointer-events-none absolute w-[150px] text-sm text-black/70"
-      >
+      <motion.p className="pointer-events-none absolute w-[150px] text-sm text-black/70">
         Search the web...
       </motion.p>
     </AnimatePresence>
