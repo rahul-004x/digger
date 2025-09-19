@@ -261,4 +261,5 @@ export const CustomMarkdown: React.FC<EnhancedMarkdownProps> = ({
         {children}
       </ReactMarkdown>
     </div>
-  );};
+  );
+};

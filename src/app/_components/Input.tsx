@@ -1,32 +1,29 @@
 "use client";
 
 import { Textarea } from "@/components/ui/textarea";
-import React, { useEffect, useRef, memo } from "react";
+import React, { useEffect, useRef, useState, memo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type TProps = {
-  promptValue: string;
-  setPromptValue: React.Dispatch<React.SetStateAction<string>>;
+  onSubmit: (text: string) => void;
   disabled?: boolean;
-  handleDisplayResult: () => void;
-  reset?: () => void;
   style?: string;
   top: string;
 };
 
 function Input({
-  promptValue,
-  setPromptValue,
+  onSubmit,
   disabled,
-  handleDisplayResult,
   style,
   top,
 }: TProps) {
+  const [inputText, setInputText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
+    const alphaKeyRegex = /^[a-zA-Z]$/
     const handleKey = (e: KeyboardEvent) => {
       if (
         e.metaKey ||
@@ -37,21 +34,21 @@ function Input({
         return;
       }
 
-      if (/^[a-zA-Z]$/.test(e.key)) {
+      if (alphaKeyRegex.test(e.key)) {
         e.preventDefault();
         textareaRef.current?.focus();
-        // const el = textareaRef.current!;
-        // const start = el.selectionStart!;
-        // const end = el.selectionEnd!;
-        // const newValue =
-        //   el.value.slice(0, start) + e.key + el.value.slice(end);
-        // el.value = newValue;
-        // el.setSelectionRange(start + 1, start + 1);
       }
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
+
+  const handleSubmit = () => {
+    if (inputText.trim()) {
+      onSubmit(inputText.trim());
+      setInputText("");
+    }
+  };
 
   const MAX_HEIGHT = 200;
 
@@ -74,21 +71,21 @@ function Input({
             <div className="relative">
               <Textarea
                 id="ai-input"
-                value={promptValue}
+                value={inputText}
                 ref={textareaRef}
                 className="w-full resize-none rounded-2xl rounded-b-none border-none bg-black/5 px-4 py-3 leading-[1.2] focus-visible:ring-0"
                 onChange={(e) => {
-                  setPromptValue(e.target.value);
+                  setInputText(e.target.value);
                 }}
                 onKeyDown={(e) => {
                   if (disabled) return;
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
-                    handleDisplayResult();
+                    handleSubmit();
                   }
                 }}
               />
-              {!promptValue && (
+              {!inputText && (
                 <div className={cn("absolute left-4", top)}>
                   <AnimatePlaceholder />
                 </div>
@@ -98,12 +95,13 @@ function Input({
           <div className={style}>
             <div className="absolute right-3 bottom-3">
               <button
+                onClick={handleSubmit}
                 disabled={disabled}
                 className={cn(
                   "rounded-full p-2 transition-colors",
                   disabled
                     ? "cursor-not-allowed bg-black/5 text-black/40 dark:bg-white/5 dark:text-white/40"
-                    : promptValue
+                    : inputText.trim()
                       ? "bg-black/95 text-white/90"
                       : "bg-black/5 text-black/40 hover:text-black dark:bg-white/5 dark:text-white/40 dark:hover:text-white",
                 )}

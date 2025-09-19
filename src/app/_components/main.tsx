@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "@/trpc/react";
 import { MessageSquare, ChevronDown } from "lucide-react";
@@ -34,7 +34,6 @@ type Message = {
 };
 
 const Main = () => {
-  const [promptValue, setPromptValue] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | undefined>();
 
@@ -95,11 +94,6 @@ const Main = () => {
     onSuccess: async (data) => {
       if (data.conversationId && !conversationId) {
         setConversationId(data.conversationId);
-        // window.history.pushState(
-        //   null,
-        //   "",
-        //   `?conversationId=${data.conversationId}`,
-        // );
         await utils.db.getConversations.invalidate();
       }
       setSources(data.sources);
@@ -172,28 +166,23 @@ const Main = () => {
     }
   }, [chunks, userScrolledUp, sources]); // Added sources to dependency array
 
-  const handleDisplayResult = useCallback(() => {
-    if (promptValue.trim()) {
-      const newQuestion = promptValue;
+  const handleSubmit = (question: string) => {
+    setIsContextQueryEnabled(false);
+    setSources([]);
+    setCurrentQuestion(question);
 
-      setIsContextQueryEnabled(false);
-      setSources([]);
-      setCurrentQuestion(newQuestion);
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", content: question },
+      { role: "assistant", content: "" },
+    ]);
 
-      setMessages((prev) => [
-        ...prev,
-        { role: "user", content: newQuestion },
-        { role: "assistant", content: "" },
-      ]);
+    getSourceMutation.mutate({ question, conversationId });
 
-      getSourceMutation.mutate({ question: newQuestion, conversationId });
-      setPromptValue("");
-
-      // Reset scroll state and scroll to new message
-      setUserScrolledUp(false);
-      setTimeout(scrollToBottom, 100);
-    }
-  }, [promptValue, conversationId, getSourceMutation]);
+    // Reset scroll state and scroll to new message
+    setUserScrolledUp(false);
+    setTimeout(scrollToBottom, 100);
+  };
 
   const isLoading = getSourceMutation.isPending || isContextFetching;
   const showChatView = messages.length > 0 || isHistoryLoading;
@@ -210,9 +199,7 @@ const Main = () => {
         <h1 className="mb-7 text-3xl">digger</h1>
         <div className="w-full max-w-3xl">
           <InputArea
-            promptValue={promptValue}
-            setPromptValue={setPromptValue}
-            handleDisplayResult={handleDisplayResult}
+            onSubmit={handleSubmit}
             disabled={isLoading}
             style="h-12 rounded-md bg-black/5"
             top="top-3"
@@ -286,9 +273,7 @@ const Main = () => {
       <div className="flex-shrink-0">
         <div className="mx-auto w-full max-w-3xl">
           <InputArea
-            promptValue={promptValue}
-            setPromptValue={setPromptValue}
-            handleDisplayResult={handleDisplayResult}
+            onSubmit={handleSubmit}
             disabled={isLoading}
             top="top-3"
           />

@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-sync-scripts */
+
 import "@/styles/globals.css";
 
 import { type Metadata } from "next";
@@ -24,6 +26,12 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" className={`${geist.variable}`}>
+        <head>
+          <script
+            crossOrigin="anonymous"
+            src="//unpkg.com/react-scan/dist/auto.global.js"
+          />
+        </head>
         <body>
           <TooltipProvider>
             <TRPCReactProvider>{children}</TRPCReactProvider>

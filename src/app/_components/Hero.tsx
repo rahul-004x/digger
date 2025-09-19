@@ -14,9 +14,7 @@ const Hero = () => {
           <h1 className="mb-7 text-5xl font-bold">digger</h1>
           <p className="mb-7 text-2xl">Please sign in to continue</p>
           <SignInButton>
-            <Button>
-              Sign In
-            </Button>
+            <Button>Sign In</Button>
           </SignInButton>
         </div>
       </SignedOut>

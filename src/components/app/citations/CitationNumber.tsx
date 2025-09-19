@@ -7,7 +7,7 @@ export const CitationNumber = React.forwardRef<
   return (
     <span
       ref={ref}
-      className="mx-[1px] bg-gray-200 inline-block align-text-bottom text-xs rounded px-1 tabular-nums cursor-pointer hover:bg-gray-300 transition-colors"
+      className="mx-[1px] inline-block cursor-pointer rounded bg-gray-200 px-1 align-text-bottom text-xs tabular-nums transition-colors hover:bg-gray-300"
       {...props}
     >
       {num}

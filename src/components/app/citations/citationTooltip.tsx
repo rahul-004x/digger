@@ -12,13 +12,13 @@ interface CitationTooltipProps {
 }
 export const CitationTooltip = ({ index, sources }: CitationTooltipProps) => {
   return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <CitationNumber num={index + 1} />
-        </TooltipTrigger>
-        <TooltipContent>
-          <WebResultCard result={sources} id={sources.url} />
-        </TooltipContent>
-      </Tooltip>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <CitationNumber num={index + 1} />
+      </TooltipTrigger>
+      <TooltipContent>
+        <WebResultCard result={sources} id={sources.url} />
+      </TooltipContent>
+    </Tooltip>
   );
 };

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -37,30 +36,30 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="w-64 flex flex-col bg-[#F5F6FA] h-screen p-4 rounded-md">
+    <div className="flex h-screen w-64 flex-col rounded-md bg-[#F5F6FA] p-4">
       {/* Header */}
-      <h2 className="text-xl font-bold mb-4 ml-18">Digger</h2>
+      <h2 className="mb-4 ml-18 text-xl font-bold">Digger</h2>
 
       {/* New Chat button */}
       <button
-        className="px-4 py-2 w-full bg-black text-white rounded-md hover:bg-gray-800 mb-4"
+        className="mb-4 w-full cursor-pointer rounded-md bg-black px-4 py-2 text-white hover:bg-gray-800"
         onClick={handleNewChat}
       >
         New Chat
       </button>
 
       {/* Recent conversations */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <h3 className="text-sm font-medium text-gray-500 mb-2">
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <h3 className="mb-2 text-sm font-medium text-gray-500">
           Recent Conversations
         </h3>
 
         <div className="flex-1 space-y-1 overflow-y-auto pr-1">
           {isLoading ? (
             <div className="flex w-full flex-col gap-1">
-              <div className="h-4 w-full rounded bg-gray-300 animate-pulse"></div>
-              <div className="h-4 w-full rounded bg-gray-300 animate-pulse"></div>
-              <div className="h-4 w-full rounded bg-gray-300 animate-pulse"></div>
+              <div className="h-4 w-full animate-pulse rounded bg-gray-300"></div>
+              <div className="h-4 w-full animate-pulse rounded bg-gray-300"></div>
+              <div className="h-4 w-full animate-pulse rounded bg-gray-300"></div>
             </div>
           ) : conversations.length === 0 ? (
             <p className="text-sm text-gray-500">No conversations yet</p>
@@ -70,8 +69,10 @@ const Sidebar = () => {
                 key={conversation.id}
                 onClick={() => handleSelectConversation(conversation.id)}
                 className={cn(
-                  "p-2 text-sm hover:bg-gray-200 cursor-pointer rounded-md truncate",
-                  currentConversationId === conversation.id ? "bg-gray-200" : ""
+                  "cursor-pointer truncate rounded-md p-2 text-sm hover:bg-gray-200",
+                  currentConversationId === conversation.id
+                    ? "bg-gray-200"
+                    : "",
                 )}
                 title={conversation.name ?? "Untitled Conversation"} // tooltip for long names
               >
