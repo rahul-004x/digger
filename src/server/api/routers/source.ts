@@ -214,7 +214,7 @@ Please ensure all code is functional, all math formulas use correct LaTeX syntax
 
       try {
         const stream = await openRouterClient.chat.completions.create({
-          model: "openai/gpt-oss-20b:free",
+          model: "google/gemini-2.0-flash-exp:free",
           messages: [
             { role: "system", content: mainAnswerPrompt },
             {
