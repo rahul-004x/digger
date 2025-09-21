@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-sync-scripts */
+
 import "@/styles/globals.css";
 
 import { type Metadata } from "next";
@@ -5,6 +7,7 @@ import { Geist } from "next/font/google";
 
 import { TRPCReactProvider } from "@/trpc/react";
 import { ClerkProvider } from "@clerk/nextjs";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export const metadata: Metadata = {
   title: "Digger",
@@ -23,8 +26,16 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" className={`${geist.variable}`}>
+        <head>
+          <script
+            crossOrigin="anonymous"
+            src="//unpkg.com/react-scan/dist/auto.global.js"
+          />
+        </head>
         <body>
-          <TRPCReactProvider>{children}</TRPCReactProvider>
+          <TooltipProvider>
+            <TRPCReactProvider>{children}</TRPCReactProvider>
+          </TooltipProvider>
         </body>
       </html>
     </ClerkProvider>

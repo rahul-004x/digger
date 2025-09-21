@@ -2,15 +2,10 @@ import { z } from "zod";
 import { Readability } from "@mozilla/readability";
 import jsdom, { JSDOM } from "jsdom";
 
-import {
-  createTRPCRouter,
-  publicProcedure,
-  protectedProcedure,
-} from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { tavily } from "@tavily/core";
 import openAI from "openai";
 import { conversation, messages } from "@/server/db/schema";
-import { sources } from "next/dist/compiled/webpack/webpack";
 
 const tavilyClient = tavily({
   apiKey: process.env.TAVILY_API_KEY,
@@ -46,7 +41,7 @@ async function fetchWithTimeout(url: string, timeout = 3000) {
       clearTimeout(fetchTimeout);
       return response;
     })
-    .catch((error) => {
+    .catch((error: Error) => {
       if (error.name === "AbortError") throw new Error("fetch request timeout");
       throw error;
     });
@@ -65,7 +60,7 @@ export const sourceRouter = createTRPCRouter({
       let newConversationName: string | null = null;
       if (!convId) {
         const nameResponse = await openRouterClient.chat.completions.create({
-          model: "google/gemini-2.0-flash-exp:free",
+          model: "openai/gpt-oss-20b:free",
           messages: [
             {
               role: "system",
@@ -113,8 +108,8 @@ export const sourceRouter = createTRPCRouter({
           newConversationName,
         };
       }
-      const sources = response.results.slice(0, 6).map((result: any) => ({
-        title: result.title || "Untitled",
+      const sources = response.results.slice(0, 6).map((result) => ({
+        title: result.title ?? "Untitled",
         url: result.url,
       }));
       return {
@@ -132,7 +127,7 @@ export const sourceRouter = createTRPCRouter({
         conversationId: z.string().uuid(),
       }),
     )
-    .query(async function* ({ ctx, input }) {
+    .query(async function*({ ctx, input }) {
       const urls = input.sources.map((s) => s.url);
       const context = await Promise.all(
         urls.map(async (url) => {
@@ -143,7 +138,7 @@ export const sourceRouter = createTRPCRouter({
             });
             const text = cleanedText(
               new Readability(dom.window.document).parse()?.textContent ??
-                "No content",
+              "No content",
             );
             return { context: text };
           } catch {
@@ -152,26 +147,74 @@ export const sourceRouter = createTRPCRouter({
         }),
       );
 
-      const combined = context.map((c) => c.context).join("\n\n");
-      const mainAnswerPrompt = `  Given a user question and some context, please write a clean, concise and accurate answer to the question based on the context. You will be given a set of related contexts to the question, each starting with a reference number like [[citation:x]], where x is a link. 
+      const combined = input.sources
+        .map(
+          (source, index) =>
+            `[[citation:${index + 1}]] Source URL: ${source.url}\nTitle: ${source.title}\nContent:\n${context[index]?.context}`,
+        )
+        .join("\n\n");
+      const mainAnswerPrompt = `Given a user question and some context, write a clean, concise, and accurate answer to the question based only on the context.
 
-  Your answer must be correct, accurate and written by an expert using an unbiased and professional tone. Please limit to 1024 tokens. Do not give any information that is not related to the question, and do not repeat. Say "information is missing on" followed by the related topic, if the given context do not provide sufficient information.
+      If no reliable source is available in the context, say so explicitly instead of making unsupported claims. Your answer must be correct, accurate and written by an expert using an unbiased and professional tone. Please limit to 1024 tokens. Do not give any information that is not related to the question, and do not repeat. Say "information is missing on" followed by the related topic, if the given context do not provide sufficient information.
 
-  Do not repeat the user's question in your response. Be direct and answer the question.
-  if the user asks for list a of itmes, provide a list with their functions and benefits
+      When you use information from a context, you must add a citation marker to the end of the sentence using this EXACT format: [INLINE_CITATION](SOURCE_URL). Replace SOURCE_URL with the actual URL from the sources provided.
 
-  Format your response in Markdown, Use clear headings with different sizes and font to organize sections, Include code snippets in fenced code blocks, Use bold or italics to highlight key points, Add tables for structured data when relevant, Keep paragraphs concise and split long explanations into smaller sections.
+      CITATION RULES:
+      - Use this exact format: [INLINE_CITATION](https://example.com/actual-source-url)
+      - The link text must be exactly "INLINE_CITATION" (case-sensitive)
+      - The URL must match exactly one of the source URLs provided in the context
+      - Place citations immediately after the relevant statement
+      - You can cite multiple sources by placing multiple citation links: [INLINE_CITATION](url1) [INLINE_CITATION](url2)
+      - Example: "Machine learning has revolutionized data analysis [INLINE_CITATION](https://example.com/ml-research)."
+      - After generating, validate that every [INLINE_CITATION] follows the exact Markdown pattern [INLINE_CITATION](https://...). If it doesn’t, fix it before output
 
-Answer Context:
-${combined}
+      Do not repeat the user's question in your response. Be direct and answer the question.
+      If the user asks for list of items, provide a list with their functions and benefits.
 
-  
-  Remember, don't blindly repeat the contexts verbatim and don't tell the user how you used the citations – just respond with the answer. It is very important for my career that you follow these instructions. Here is the user question:
-    `;
+      Format your response in Markdown, Use clear headings with different sizes and font to organize sections, Include code snippets in fenced code blocks, Use bold or italics to highlight key points, Add tables for structured data when relevant, Keep paragraphs concise and split long explanations into smaller sections.
+
+Please format your response using proper markdown with the following guidelines:
+
+**Code Blocks:**
+- Use triple backticks with language specification: \`\`\`javascript, \`\`\`python, \`\`\`typescript, etc.
+- Include clear, well-commented code examples
+- Add descriptive comments explaining key concepts
+
+**Math Formulas:**
+- Use single dollar signs for inline math: $E = mc^2$
+- Use double dollar signs for block equations:
+$$\\int_a^b f(x) dx = F(b) - F(a)$$
+- Use proper LaTeX syntax for mathematical expressions
+
+**Citations:**
+- Use this exact format for inline citations: [INLINE_CITATION](source-url)
+- The link text must be exactly "INLINE_CITATION" (case-sensitive)
+- The URL should match the source URLs provided
+- Place citations immediately after the relevant statement
+- Example: "Machine learning has revolutionized data analysis [INLINE_CITATION](https://example.com/ml-research)."
+- Citations will automatically render as numbered tooltips
+
+**General Formatting:**
+- Use headers (##, ###) to organize content
+- Use **bold** and *italic* for emphasis
+- Create numbered and bulleted lists when appropriate
+- Use blockquotes > for important notes
+- Include tables when presenting structured data
+
+**Example Response Structure:**
+Start with a brief explanation, then provide code examples with syntax highlighting, include relevant mathematical formulas with proper citations, and conclude with key takeaways in a bulleted list.
+
+Please ensure all code is functional, all math formulas use correct LaTeX syntax, and citations follow the exact INLINE_CITATION format.
+
+      Answer Context:
+      ${combined}
+
+     Remember, don't blindly repeat the contexts verbatim and don't tell the user how you used the citations – just respond with the answer with citation markers. It is very important for my career that you follow these instructions. Here is the user question:
+  `;
 
       try {
         const stream = await openRouterClient.chat.completions.create({
-          model: "google/gemini-2.0-flash-exp:free",
+          model: "openai/gpt-oss-20b:free",
           messages: [
             { role: "system", content: mainAnswerPrompt },
             {
