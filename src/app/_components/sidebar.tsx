@@ -71,7 +71,7 @@ const Sidebar = () => {
                 className={cn(
                   "cursor-pointer truncate rounded-md p-2 text-sm hover:bg-gray-200",
                   currentConversationId === conversation.id
-                    ? "bg-gray-200"
+                    ? "bg-gray-300"
                     : "",
                 )}
                 title={conversation.name ?? "Untitled Conversation"} // tooltip for long names

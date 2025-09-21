@@ -264,7 +264,7 @@ const Main = () => {
               setUserScrolledUp(false);
               scrollToBottom();
             }}
-            className="fixed right-210 bottom-30 z-10 cursor-pointer rounded-full border border-gray-200 bg-white p-2 shadow-lg hover:bg-gray-50"
+            className="bottom-[110px] fixed right-[850px] z-10 cursor-pointer rounded-full border border-gray-200 bg-white p-2 shadow-lg hover:bg-gray-50"
           >
             <ChevronDown size={20} className="text-gray-600" />
           </button>
@@ -272,11 +272,7 @@ const Main = () => {
       </div>
       <div className="flex-shrink-0">
         <div className="mx-auto w-full max-w-3xl">
-          <InputArea
-            onSubmit={handleSubmit}
-            disabled={isLoading}
-            top="top-3"
-          />
+          <InputArea onSubmit={handleSubmit} disabled={isLoading} top="top-3" />
         </div>
       </div>
     </div>
