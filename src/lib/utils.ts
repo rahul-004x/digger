@@ -1,14 +1,15 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return twMerge(clsx(inputs))
 }
 
 export function getDomainFromUrl(url: string): string {
   try {
-    return new URL(url).hostname;
-  } catch {
+    const urlObj = new URL(url);
+    return urlObj.hostname;
+  } catch  {
     return url;
   }
 }

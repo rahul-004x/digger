@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/trpc/react";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { X } from "lucide-react";
 
 type Conversation = {
   id: string;
@@ -17,6 +19,8 @@ const Sidebar = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentConversationId = searchParams.get("conversationId");
+
+  const isMobile = useIsMobile()
 
   const { data: conversationsData, isLoading } =
     api.db.getConversations.useQuery();
@@ -37,10 +41,12 @@ const Sidebar = () => {
 
   return (
     <div className="flex h-screen w-64 flex-col rounded-md bg-[#F5F6FA] p-4">
-      {/* Header */}
-      <h2 className="mb-4 ml-18 text-xl font-bold">Digger</h2>
-
-      {/* New Chat button */}
+      <div className="flex items-center justify-between">
+        <h2 className="mb-4 text-xl font-bold">Digger</h2>
+        {isMobile && (
+        <X size={23} />
+        )}
+      </div>
       <button
         className="mb-4 w-full cursor-pointer rounded-md bg-black px-4 py-2 text-white hover:bg-gray-800"
         onClick={handleNewChat}
