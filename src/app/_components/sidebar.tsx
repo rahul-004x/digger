@@ -20,7 +20,7 @@ const Sidebar = () => {
   const searchParams = useSearchParams();
   const currentConversationId = searchParams.get("conversationId");
 
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile();
 
   const { data: conversationsData, isLoading } =
     api.db.getConversations.useQuery();
@@ -43,9 +43,7 @@ const Sidebar = () => {
     <div className="flex h-screen w-64 flex-col rounded-md bg-[#F5F6FA] p-4">
       <div className="flex items-center justify-between">
         <h2 className="mb-4 text-xl font-bold">Digger</h2>
-        {isMobile && (
-        <X size={23} />
-        )}
+        {isMobile && <X size={23} />}
       </div>
       <button
         className="mb-4 w-full cursor-pointer rounded-md bg-black px-4 py-2 text-white hover:bg-gray-800"
