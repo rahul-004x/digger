@@ -40,7 +40,7 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="flex h-screen w-64 flex-col rounded-md bg-[#F5F6FA] p-4">
+    <div className="flex h-screen w-64 flex-col rounded-md bg-[#F9F9F9] p-4">
       <div className="flex items-center justify-between">
         <h2 className="mb-4 text-xl font-bold">Digger</h2>
         {isMobile && <X size={23} />}
@@ -73,9 +73,9 @@ const Sidebar = () => {
                 key={conversation.id}
                 onClick={() => handleSelectConversation(conversation.id)}
                 className={cn(
-                  "cursor-pointer truncate rounded-md p-2 text-sm hover:bg-gray-200",
+                  "cursor-pointer truncate rounded-md p-2 text-sm hover:bg-gray-100",
                   currentConversationId === conversation.id
-                    ? "bg-gray-300"
+                    ? "bg-gray-200"
                     : "",
                 )}
                 title={conversation.name ?? "Untitled Conversation"} // tooltip for long names
