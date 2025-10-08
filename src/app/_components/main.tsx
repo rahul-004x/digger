@@ -76,7 +76,7 @@ const Main = () => {
   const { data: initialMessages, isLoading: isHistoryLoading } =
     api.db.getMessages.useQuery(
       { conversationId: conversationId! },
-      { enabled: !!conversationId && messages.length === 0 }, // Only run if ID exists and messages are not loaded
+      { enabled: !!conversationId && messages.length === 0 },
     );
 
   useEffect(() => {
