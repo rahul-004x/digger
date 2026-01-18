@@ -7,8 +7,10 @@ import { tavily } from "@tavily/core";
 import openAI from "openai";
 import { conversation, messages } from "@/server/db/schema";
 
+
+
 const tavilyClient = tavily({
-  apiKey: process.env.TAVILY_API_KEY,
+  apiKey: process.env.TAVILpostgresY_API_KEY,
 });
 
 const openRouterClient = new openAI({
@@ -127,7 +129,7 @@ export const sourceRouter = createTRPCRouter({
         conversationId: z.string().uuid(),
       }),
     )
-    .query(async function*({ ctx, input }) {
+    .query(async function* ({ ctx, input }) {
       const urls = input.sources.map((s) => s.url);
       const context = await Promise.all(
         urls.map(async (url) => {

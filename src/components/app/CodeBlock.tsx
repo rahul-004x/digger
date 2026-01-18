@@ -29,14 +29,14 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
 
   if (inline) {
     return (
-      <code className="bg-[#F9F9F9] rounded-full px-2 py-1 font-mono text-sm">
+      <code className="rounded-full bg-[#F9F9F9] px-2 py-1 font-mono text-sm">
         {children}
       </code>
     );
   }
 
   return (
-    <div className="group relative my-4 max-w-3xl bg-[#F9F9F9] rounded-full">
+    <div className="group relative my-4 max-w-3xl rounded-full bg-[#F9F9F9]">
       <div className="flex items-center justify-between rounded-t-lg bg-[#F9F9F9] px-4 py-2">
         <span className="text-sm font-medium text-black/75">
           {language || "text"}
@@ -74,4 +74,3 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
     </div>
   );
 };
-

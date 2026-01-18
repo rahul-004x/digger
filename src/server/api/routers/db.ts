@@ -14,6 +14,7 @@ export const dbRouter = createTRPCRouter({
 
     return conversations;
   }),
+
   getMessages: protectedProcedure
     .input(z.object({ conversationId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
