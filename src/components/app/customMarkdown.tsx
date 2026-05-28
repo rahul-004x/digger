@@ -31,7 +31,7 @@ const createMarkdownComponents = (
       {children}
     </p>
   ),
-  hr: ({ }) => <hr className="border-border pb-4" />,
+  hr: ({}) => <hr className="border-border pb-4" />,
   pre: ({ children }) => {
     // Handle code blocks
     const child = React.Children.toArray(children)[0] as React.ReactElement;

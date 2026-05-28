@@ -7,8 +7,6 @@ import { tavily } from "@tavily/core";
 import openAI from "openai";
 import { conversation, messages } from "@/server/db/schema";
 
-
-
 const tavilyClient = tavily({
   apiKey: process.env.TAVILpostgresY_API_KEY,
 });
@@ -140,7 +138,7 @@ export const sourceRouter = createTRPCRouter({
             });
             const text = cleanedText(
               new Readability(dom.window.document).parse()?.textContent ??
-              "No content",
+                "No content",
             );
             return { context: text };
           } catch {
@@ -216,7 +214,7 @@ Please ensure all code is functional, all math formulas use correct LaTeX syntax
 
       try {
         const stream = await openRouterClient.chat.completions.create({
-          model: "google/gemini-2.0-flash-exp:free",
+          model: "google/gemini-3-flash-preview",
           messages: [
             { role: "system", content: mainAnswerPrompt },
             {
