@@ -173,38 +173,38 @@ export const sourceRouter = createTRPCRouter({
 
       Format your response in Markdown, Use clear headings with different sizes and font to organize sections, Include code snippets in fenced code blocks, Use bold or italics to highlight key points, Add tables for structured data when relevant, Keep paragraphs concise and split long explanations into smaller sections.
 
-Please format your response using proper markdown with the following guidelines:
+      Please format your response using proper markdown with the following guidelines:
 
-**Code Blocks:**
-- Use triple backticks with language specification: \`\`\`javascript, \`\`\`python, \`\`\`typescript, etc.
-- Include clear, well-commented code examples
-- Add descriptive comments explaining key concepts
+      **Code Blocks:**
+      - Use triple backticks with language specification: \`\`\`javascript, \`\`\`python, \`\`\`typescript, etc.
+      - Include clear, well-commented code examples
+      - Add descriptive comments explaining key concepts
 
-**Math Formulas:**
-- Use single dollar signs for inline math: $E = mc^2$
-- Use double dollar signs for block equations:
-$$\\int_a^b f(x) dx = F(b) - F(a)$$
-- Use proper LaTeX syntax for mathematical expressions
+      **Math Formulas:**
+      - Use single dollar signs for inline math: $E = mc^2$
+      - Use double dollar signs for block equations:
+      $$\\int_a^b f(x) dx = F(b) - F(a)$$
+      - Use proper LaTeX syntax for mathematical expressions
 
-**Citations:**
-- Use this exact format for inline citations: [INLINE_CITATION](source-url)
-- The link text must be exactly "INLINE_CITATION" (case-sensitive)
-- The URL should match the source URLs provided
-- Place citations immediately after the relevant statement
-- Example: "Machine learning has revolutionized data analysis [INLINE_CITATION](https://example.com/ml-research)."
-- Citations will automatically render as numbered tooltips
+      **Citations:**
+      - Use this exact format for inline citations: [INLINE_CITATION](source-url)
+      - The link text must be exactly "INLINE_CITATION" (case-sensitive)
+      - The URL should match the source URLs provided
+      - Place citations immediately after the relevant statement
+      - Example: "Machine learning has revolutionized data analysis [INLINE_CITATION](https://example.com/ml-research)."
+      - Citations will automatically render as numbered tooltips
 
-**General Formatting:**
-- Use headers (##, ###) to organize content
-- Use **bold** and *italic* for emphasis
-- Create numbered and bulleted lists when appropriate
-- Use blockquotes > for important notes
-- Include tables when presenting structured data
+      **General Formatting:**
+      - Use headers (##, ###) to organize content
+      - Use **bold** and *italic* for emphasis
+      - Create numbered and bulleted lists when appropriate
+      - Use blockquotes > for important notes
+      - Include tables when presenting structured data
 
-**Example Response Structure:**
-Start with a brief explanation, then provide code examples with syntax highlighting, include relevant mathematical formulas with proper citations, and conclude with key takeaways in a bulleted list.
+      **Example Response Structure:**
+      Start with a brief explanation, then provide code examples with syntax highlighting, include relevant mathematical formulas with proper citations, and conclude with key takeaways in a bulleted list.
 
-Please ensure all code is functional, all math formulas use correct LaTeX syntax, and citations follow the exact INLINE_CITATION format.
+      Please ensure all code is functional, all math formulas use correct LaTeX syntax, and citations follow the exact INLINE_CITATION format.
 
       Answer Context:
       ${combined}
